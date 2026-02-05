@@ -1,0 +1,126 @@
+/* Full-screen wrapper with background */
+.auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../assets/hobbyjpeg.jpeg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden; /* prevent page scrolling */
+}
+
+/* Dark overlay so form is readable */
+.auth-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+/* Form container above overlay */
+.auth-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 400px;
+
+  max-height: 85vh;     /* 👈 limits height */
+  overflow-y: auto;     /* 👈 enables scroll ONLY here */
+
+  padding: 40px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+
+/* Headings */
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #fff;
+}
+
+/* Form fields spacing */
+.auth-container form div {
+  margin-bottom: 15px;
+}
+
+/* Labels */
+.auth-container label {
+  display: block;
+  margin-bottom: 5px;
+  color: #fff;
+}
+
+/* Input fields */
+.auth-container input,
+.auth-container select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.auth-container select option {
+  background-color: #1c1c1c; /* dropdown list bg */
+  color: #fff;
+}
+.auth-container input::placeholder {
+  color: #ddd;
+}
+
+/* Buttons */
+.auth-container button {
+  width: 100%;
+  padding: 14px;
+  background-color: #2575fc;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.auth-container button:hover {
+  background-color: #6a11cb;
+}
+
+/* Paragraph text */
+.auth-container p {
+  text-align: center;
+  margin-top: 20px;
+  color: #fff;
+}
+
+/* Links */
+.auth-container a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.auth-container a:hover {
+  color: #ddd;
+}
+
+/* 🔥 Optional: nicer scrollbar */
+.auth-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.auth-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.auth-container::-webkit-scrollbar-track {
+  background: transparent;
+}
