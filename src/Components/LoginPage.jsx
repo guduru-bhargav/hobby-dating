@@ -3,24 +3,23 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Auth.css";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("BHargav@gmail.com");
+  const [password, setPassword] = useState("bhargav@123");
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ email, password });
-    alert("Logged in!");
-    navigate("/"); // redirect after login
+   navigate("/dashboard");
   };
 
   return (
-    <div className="auth-wrapper"> {/* Added wrapper to center form */}
+    <div className="auth-wrapper"> 
       <div className="auth-container">
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div>
-            <label>Email:</label>
+            <label>Email</label>
             <input
               type="email"
               value={email}
@@ -29,7 +28,7 @@ function Login() {
             />
           </div>
           <div>
-            <label>Password:</label>
+            <label>Password</label>
             <input
               type="password"
               value={password}

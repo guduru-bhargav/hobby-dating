@@ -1,0 +1,23 @@
+.page-wrapper {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  font-family: "Segoe UI", sans-serif;
+  color: #fff;
+  background: #0f172a; /* dark background for consistency */
+}
+
+.page-wrapper h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.page-wrapper p {
+  font-size: 18px;
+  max-width: 600px;
+  opacity: 0.85;
+}

@@ -28,12 +28,8 @@ function Signup() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // This is what you will send to backend later
     console.log("Signup Data:", formData);
-
-    alert("Account created!");
-    navigate("/login");
+    navigate("/dashboard");
   };
 
   return (
