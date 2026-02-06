@@ -88,12 +88,18 @@ export default function Dashboard() {
             <section className="hero container">
                 <div className="hero-text">
                     <h1>
-                        Find your <br />
-                        <span>Real Feelings</span><br />
-                        With cherish
+                        Love what you <br />
+                        <span>Do Together</span><br />
+                        On Cherish
                     </h1>
-                    <p>Our members are looking for their very own love story and we do everything to help them achieve it.</p>
-                    <button className="btn-gradient">Get Started</button>
+
+                    <p>We help our members find meaningful connections, so every love story has the chance to flourish.</p>
+                    <button
+                        className="btn-gradient"
+                        onClick={() => navigate("/signup")}
+                    >
+                        Get Started
+                    </button>
                 </div>
                 <div className="hero-profiles">
                     {profiles.slice(0, 2).map(({ name, age, img }, i) => (
@@ -234,8 +240,8 @@ export default function Dashboard() {
                     <div className="footer-section">
                         <h5>Contact Us</h5>
                         <ul>
-                            <li>info@cherish.com</li>
-                            <li>(123) 800-8817</li>
+                            <li>info@hda.com</li>
+                            <li>(123) 0000 000</li>
                             <li>Location sample here</li>
                         </ul>
                     </div>
