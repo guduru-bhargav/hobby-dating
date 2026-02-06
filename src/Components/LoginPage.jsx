@@ -10,7 +10,7 @@ function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ email, password });
-   navigate("/dashboard");
+   navigate("/MainPage");
   };
 
   return (

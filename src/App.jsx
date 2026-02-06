@@ -8,6 +8,7 @@ import About from './Components/About';
 import Services from './Components/Services';
 import WhyUs from './Components/WhyUs';
 import Contact from './Components/Contact';
+import MainPage from './Components/MainPage';
 
 function App() {
   return (
@@ -23,6 +24,8 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/why-us" element={<WhyUs />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/MainPage" element={<MainPage />} />
+
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
