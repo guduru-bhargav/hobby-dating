@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase"; // make sure you have supabase.js
 import "./Auth.css";
 
 function Signup() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -26,10 +28,58 @@ function Signup() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Signup Data:", formData);
-    navigate("/dashboard");
+    setLoading(true);
+
+    try {
+      // 1️⃣ Sign up the user
+      const { data: authData, error: authError } =
+        await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+        });
+
+      if (authError) throw authError;
+
+      // 2️⃣ Upload profile photo if exists
+      let profilePhotoUrl = null;
+      if (formData.profile_photo_main) {
+        const fileExt = formData.profile_photo_main.name.split(".").pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("profile-photos") // create a bucket in Supabase Storage
+          .upload(fileName, formData.profile_photo_main);
+
+        if (uploadError) throw uploadError;
+
+        profilePhotoUrl = `${supabase.storageUrl}/object/public/profile-photos/${fileName}`;
+      }
+
+      // 3️⃣ Insert profile data into profiles table
+      const { error: dbError } = await supabase.from("profiles").insert([
+        {
+          user_id: authData.user.id,
+          first_name: formData.first_name,
+          date_of_birth: formData.date_of_birth,
+          gender: formData.gender,
+          gender_preference: formData.gender_preference,
+          location_city: formData.location_city,
+          hobbies: formData.hobbies,
+          dating_intent: formData.dating_intent,
+          profile_photo_main: profilePhotoUrl,
+        },
+      ]);
+
+      if (dbError) throw dbError;
+
+      alert("Account created successfully!");
+      navigate("/dashboard");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,7 +88,6 @@ function Signup() {
         <h2>Sign Up</h2>
 
         <form onSubmit={handleSubmit}>
-          {/* First Name */}
           <div>
             <label>First Name</label>
             <input
@@ -50,7 +99,6 @@ function Signup() {
             />
           </div>
 
-          {/* Email */}
           <div>
             <label>Email</label>
             <input
@@ -62,7 +110,6 @@ function Signup() {
             />
           </div>
 
-          {/* Password */}
           <div>
             <label>Password</label>
             <input
@@ -74,7 +121,6 @@ function Signup() {
             />
           </div>
 
-          {/* Date of Birth */}
           <div>
             <label>Date of Birth</label>
             <input
@@ -86,7 +132,6 @@ function Signup() {
             />
           </div>
 
-          {/* Gender */}
           <div>
             <label>Gender</label>
             <select
@@ -102,7 +147,6 @@ function Signup() {
             </select>
           </div>
 
-          {/* Gender Preference */}
           <div>
             <label>Interested In</label>
             <select
@@ -118,7 +162,6 @@ function Signup() {
             </select>
           </div>
 
-          {/* Location */}
           <div>
             <label>City</label>
             <input
@@ -130,7 +173,6 @@ function Signup() {
             />
           </div>
 
-          {/* Hobbies */}
           <div>
             <label>Hobbies</label>
             <input
@@ -142,7 +184,6 @@ function Signup() {
             />
           </div>
 
-          {/* Dating Intent */}
           <div>
             <label>Dating Intent</label>
             <select
@@ -158,7 +199,6 @@ function Signup() {
             </select>
           </div>
 
-          {/* Profile Photo */}
           <div>
             <label>Profile Photo</label>
             <input
@@ -169,7 +209,9 @@ function Signup() {
             />
           </div>
 
-          <button type="submit">Create Account</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating..." : "Create Account"}
+          </button>
         </form>
 
         <p>
