@@ -1,6 +1,7 @@
 import React from "react";
 // import Header from "./Header";
 import "./MainPage.css";
+import ProfileMenu from "./ProfileMenu";
 
 const profiles = [
     { id: 1, name: "Josh", age: 28, image: "https://i.pravatar.cc/300?img=1" },
@@ -37,14 +38,22 @@ function MainPage() {
             <div className="main-container">
 
                 {/* Filters */}
-                <div className="filters">
-                    <select><option>Age</option></select>
-                    <select><option>City</option></select>
-                    <select><option>Distance</option></select>
-                    <select><option>Gender</option></select>
-                    <select><option>Hobbies</option></select>
-                    <button className="filter-btn">Apply</button>
+                <div className="filters-bar">
+                    {/* Filters */}
+                    <div className="filters">
+                        <select><option>Age</option></select>
+                        <select><option>City</option></select>
+                        <select><option>Distance</option></select>
+                        <select><option>Gender</option></select>
+                        <select><option>Hobbies</option></select>
+                        <button className="filter-btn">Apply</button>
+                    </div>
+
+                    {/* Profile Icon */}
+                    <ProfileMenu />
+
                 </div>
+
 
                 {/* Profiles Grid */}
                 <div className="profiles-scroll">
@@ -65,7 +74,7 @@ function MainPage() {
                                 {/* Info */}
                                 <div className="card-info">
                                     <h3>{profile.name}, {profile.age}</h3>
-                                   
+
                                 </div>
 
                             </div>
