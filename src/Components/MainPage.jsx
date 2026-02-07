@@ -1,7 +1,7 @@
-import React from "react";
-// import Header from "./Header";
+import React,{useState} from "react";
 import "./MainPage.css";
 import ProfileMenu from "./ProfileMenu";
+import ChatBox from "./ChatBox";
 
 const profiles = [
     { id: 1, name: "Josh", age: 28, image: "https://i.pravatar.cc/300?img=1" },
@@ -31,6 +31,8 @@ const profiles = [
 ];
 
 function MainPage() {
+      const [selectedProfile, setSelectedProfile] = useState(null);
+
     return (
         <>
             {/* <Header /> */}
@@ -56,31 +58,29 @@ function MainPage() {
 
 
                 {/* Profiles Grid */}
-                <div className="profiles-scroll">
-                    <div className="profiles-grid">
-                        {profiles.map((profile) => (
-                            <div className="profile-card" key={profile.id}>
-
-                                {/* Main Image (70%) */}
-                                <div className="card-image">
-                                    <img src={profile.image} alt={profile.name} />
-                                </div>
-
-                                {/* Avatar */}
-                                <div className="avatar">
-                                    <img src={profile.image} alt={profile.name} />
-                                </div>
-
-                                {/* Info */}
-                                <div className="card-info">
-                                    <h3>{profile.name}, {profile.age}</h3>
-
-                                </div>
-
-                            </div>
-                        ))}
-                    </div>
+                   <div className="profiles-scroll">
+          <div className="profiles-grid">
+            {profiles.map((profile) => (
+              <div
+                className="profile-card"
+                key={profile.id}
+                onClick={() => setSelectedProfile(profile)} // 👈 OPEN CHAT
+              >
+                <div className="card-image">
+                  <img src={profile.image} alt={profile.name} />
                 </div>
+
+                <div className="avatar">
+                  <img src={profile.image} alt={profile.name} />
+                </div>
+
+                <div className="card-info">
+                  <h3>{profile.name}, {profile.age}</h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
                 {/* Footer CTA */}
                 <div className="cta">
@@ -89,6 +89,13 @@ function MainPage() {
                 </div>
 
             </div>
+            {/* Chat Modal */}
+      {selectedProfile && (
+        <ChatBox
+          profile={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+        />
+      )}
         </>
     );
 }
