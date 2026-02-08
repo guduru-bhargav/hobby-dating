@@ -1,33 +1,52 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase"; // make sure you have this file
+import { supabase } from "../lib/supabase";
 import "./Auth.css";
 
 function Login() {
-  const [email, setEmail] = useState("bhargav@gmail.com");
-  const [password, setPassword] = useState("bhargav@123");
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
 
-    // Supabase login
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // 1️⃣ Log in user via Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setLoading(false);
+      if (authError) throw authError;
 
-    if (error) {
-      alert(error.message);
-      return;
+      if (!authData.user) {
+        throw new Error("Login failed. User not found.");
+      }
+
+      // 2️⃣ Fetch the user's profile (maybeSingle avoids error if row doesn't exist)
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", authData.user.id)
+        .maybeSingle(); // ✅ changed from .single() to maybeSingle()
+
+      if (profileError) throw profileError;
+
+      console.log("Logged in profile:", profile);
+
+      // 3️⃣ Navigate to dashboard/main page
+      navigate("/MainPage");
+    } catch (err) {
+      setErrorMsg(err.message);
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    // If login successful, redirect to MainPage
-    navigate("/MainPage");
   };
 
   return (
@@ -44,6 +63,7 @@ function Login() {
               required
             />
           </div>
+
           <div>
             <label>Password</label>
             <input
@@ -53,11 +73,15 @@ function Login() {
               required
             />
           </div>
+
           <button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
+
+          {errorMsg && <p style={{ color: "red", marginTop: "8px" }}>{errorMsg}</p>}
         </form>
-        <p>
+
+        <p style={{ marginTop: "12px" }}>
           Don’t have an account? <Link to="/signup">Sign Up</Link>
         </p>
       </div>

@@ -29,58 +29,52 @@ function Signup() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      // 1️⃣ Sign up the user
-      const { data: authData, error: authError } =
-        await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
+  // 1️⃣ Sign up user
+  const { data: authData, error: authError } =
+    await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+    });
 
-      if (authError) throw authError;
+  if (authError) {
+    alert(authError.message);
+    setLoading(false);
+    return;
+  }
 
-      // 2️⃣ Upload profile photo if exists
-      let profilePhotoUrl = null;
-      if (formData.profile_photo_main) {
-        const fileExt = formData.profile_photo_main.name.split(".").pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("profile-photos") // create a bucket in Supabase Storage
-          .upload(fileName, formData.profile_photo_main);
+  // 2️⃣ Confirm session exists
+  const { data: sessionData } = await supabase.auth.getSession();
 
-        if (uploadError) throw uploadError;
+  if (!sessionData.session) {
+    alert("Session not active. Please login.");
+    setLoading(false);
+    return;
+  }
 
-        profilePhotoUrl = `${supabase.storageUrl}/object/public/profile-photos/${fileName}`;
-      }
+  // 3️⃣ Insert profile (optional but recommended)
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .insert({
+      user_id: authData.user.id,
+      first_name: formData.first_name,
+      gender: formData.gender,
+      location_city: formData.location_city,
+    });
 
-      // 3️⃣ Insert profile data into profiles table
-      const { error: dbError } = await supabase.from("profiles").insert([
-        {
-          user_id: authData.user.id,
-          first_name: formData.first_name,
-          date_of_birth: formData.date_of_birth,
-          gender: formData.gender,
-          gender_preference: formData.gender_preference,
-          location_city: formData.location_city,
-          hobbies: formData.hobbies,
-          dating_intent: formData.dating_intent,
-          profile_photo_main: profilePhotoUrl,
-        },
-      ]);
+  if (profileError) {
+    alert(profileError.message);
+    setLoading(false);
+    return;
+  }
 
-      if (dbError) throw dbError;
+  // ✅ 4️⃣ Redirect to Main Page
+  navigate("/MainPage");
+  setLoading(false);
+};
 
-      alert("Account created successfully!");
-      navigate("/dashboard");
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="auth-wrapper">
