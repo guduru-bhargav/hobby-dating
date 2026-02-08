@@ -12,6 +12,7 @@ import Contact from "./Components/Contact";
 import MainPage from "./Components/MainPage";
 
 import ProtectedRoute from "./Components/ProtectedRoute";
+import ProfileMain from "./Components/ProfileMain";
 
 function App() {
   return (
@@ -24,7 +25,8 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/why-us" element={<WhyUs />} />
         <Route path="/contact" element={<Contact />} />
-         <Route path="/MainPage" element={<MainPage />} />
+        <Route path="/MainPage" element={<MainPage />} />
+        <Route path="/ProfileMain" element={<ProfileMain />} />
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />
