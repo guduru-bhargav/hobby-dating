@@ -13,6 +13,7 @@ import MainPage from "./Components/MainPage";
 
 import ProtectedRoute from "./Components/ProtectedRoute";
 import ProfileMain from "./Components/ProfileMain";
+import SettingsMain from "./Components/SettingsMain";
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/MainPage" element={<MainPage />} />
         <Route path="/ProfileMain" element={<ProfileMain />} />
+         <Route path="/SettingsMain" element={<SettingsMain />} />
+
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />

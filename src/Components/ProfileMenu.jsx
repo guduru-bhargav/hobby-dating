@@ -29,7 +29,7 @@ function ProfileMenu() {
       {open && (
         <div className="profile-dropdown">
           <button onClick={() => navigate("/ProfileMain")}>Profile</button>
-          <button onClick={() => navigate("/settings")}>Settings</button>
+          <button onClick={() => navigate("/SettingsMain")}>Settings</button>
           <button onClick={() => navigate("/login")}>Logout</button>
         </div>
       )}
