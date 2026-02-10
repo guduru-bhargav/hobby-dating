@@ -17,63 +17,73 @@ function Signup() {
     location_city: "",
     hobbies: "",
     dating_intent: "",
-    profile_photo_main: null,
+    photo_1: null,
+    photo_2: null,
   });
 
+
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value, files, type } = e.target;
+
     setFormData({
       ...formData,
-      [name]: files ? files[0] : value,
+      [name]: type === "file" ? files[0] : value,
     });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  // 1️⃣ Sign up user
-  const { data: authData, error: authError } =
-    await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-    });
+    // 1️⃣ Sign up user
+    const { data: authData, error: authError } =
+      await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
 
-  if (authError) {
-    alert(authError.message);
+    if (authError) {
+      alert(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.photo_1 || !formData.photo_2) {
+      alert("Please upload at least 2 photos");
+      setLoading(false);
+      return;
+    }
+
+
+    // 2️⃣ Confirm session exists
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    if (!sessionData.session) {
+      alert("Session not active. Please login.");
+      setLoading(false);
+      return;
+    }
+
+    // 3️⃣ Insert profile (optional but recommended)
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: authData.user.id,
+        first_name: formData.first_name,
+        gender: formData.gender,
+        location_city: formData.location_city,
+      });
+
+    if (profileError) {
+      alert(profileError.message);
+      setLoading(false);
+      return;
+    }
+
+    // ✅ 4️⃣ Redirect to Main Page
+    navigate("/MainPage");
     setLoading(false);
-    return;
-  }
-
-  // 2️⃣ Confirm session exists
-  const { data: sessionData } = await supabase.auth.getSession();
-
-  if (!sessionData.session) {
-    alert("Session not active. Please login.");
-    setLoading(false);
-    return;
-  }
-
-  // 3️⃣ Insert profile (optional but recommended)
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .insert({
-      user_id: authData.user.id,
-      first_name: formData.first_name,
-      gender: formData.gender,
-      location_city: formData.location_city,
-    });
-
-  if (profileError) {
-    alert(profileError.message);
-    setLoading(false);
-    return;
-  }
-
-  // ✅ 4️⃣ Redirect to Main Page
-  navigate("/MainPage");
-  setLoading(false);
-};
+  };
 
 
   return (
@@ -81,7 +91,8 @@ function Signup() {
       <div className="auth-container">
         <h2>Sign Up</h2>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+
           <div>
             <label>First Name</label>
             <input
@@ -194,14 +205,31 @@ function Signup() {
           </div>
 
           <div>
-            <label>Profile Photo</label>
+            <label>Profile Photo 1 (Required)</label>
             <input
               type="file"
-              name="profile_photo_main"
+              name="photo_1"
               accept="image/*"
               onChange={handleChange}
+              required
             />
           </div>
+
+          <div>
+            <label>Profile Photo 2 (Required)</label>
+            <input
+              type="file"
+              name="photo_2"
+              accept="image/*"
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <p style={{ fontSize: "12px", color: "#777" }}>
+            Upload at least 2 photos to continue
+          </p>
+
 
           <button type="submit" disabled={loading}>
             {loading ? "Creating..." : "Create Account"}
