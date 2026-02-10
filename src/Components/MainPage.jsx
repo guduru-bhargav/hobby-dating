@@ -35,6 +35,25 @@ function MainPage() {
   const [userProfile, setUserProfile] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
   // const [profiles, setProfiles] = useState([]);
+  const [users, setUsers] = useState([]);
+  console.log('userProfile', userProfile)
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from("all_users")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching users:", error);
+      } else {
+        setUsers(data);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
 
   useEffect(() => {
@@ -92,7 +111,7 @@ function MainPage() {
               <div
                 className="profile-card"
                 key={profile.id}
-                onClick={() => setSelectedProfile(profile)} // 👈 OPEN CHAT
+                onClick={() => setSelectedProfile(users)} // 👈 OPEN CHAT
               >
                 <div className="card-image">
                   <img src={profile.image} alt={profile.name} />
@@ -103,7 +122,7 @@ function MainPage() {
                 </div>
 
                 <div className="card-info">
-                  <h3>{profile.name}, {profile.age}</h3>
+                  <h3>{users.full_name || 'Bhargav'}, {profile.age}</h3>
                 </div>
               </div>
             ))}
@@ -119,8 +138,11 @@ function MainPage() {
       </div>
       {/* Chat Modal */}
       {selectedProfile && (
+
+
         <ChatBox
           profile={selectedProfile}
+          currentUser={users} // <-- make sure this is the logged-in user object from Supabase
           onClose={() => setSelectedProfile(null)}
         />
       )}
