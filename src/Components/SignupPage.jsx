@@ -6,6 +6,10 @@ import "./Auth.css";
 function Signup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -47,6 +51,12 @@ function Signup() {
       setLoading(false);
       return;
     }
+    if (!emailVerified) {
+      alert("Please verify your email first");
+      setLoading(false);
+      return;
+    }
+
 
     if (!formData.photo_1 || !formData.photo_2) {
       alert("Please upload at least 2 photos");
@@ -84,6 +94,49 @@ function Signup() {
     navigate("/MainPage");
     setLoading(false);
   };
+  const verifyOtp = async () => {
+    if (!otp) {
+      alert("Enter OTP");
+      return;
+    }
+
+    const { error } = await supabase.auth.verifyOtp({
+      email: formData.email,
+      token: otp,
+      type: "email",
+    });
+
+    if (error) {
+      alert("Invalid OTP");
+    } else {
+      setEmailVerified(true);
+      setShowOtpInput(false);
+      alert("Email verified successfully");
+    }
+  };
+
+  const sendOtp = async () => {
+    if (!formData.email) {
+      alert("Enter email first");
+      return;
+    }
+
+    setEmailLoading(true);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: formData.email,
+    });
+
+    setEmailLoading(false);
+
+    if (error) {
+      alert(error.message);
+    } else {
+      setShowOtpInput(true);
+      alert("OTP sent to your email");
+    }
+  };
+
 
 
   return (
@@ -94,7 +147,7 @@ function Signup() {
         <form onSubmit={handleSubmit} noValidate>
 
           <div>
-            <label>First Name</label>
+            <label>Full name</label>
             <input
               type="text"
               name="first_name"
@@ -104,16 +157,52 @@ function Signup() {
             />
           </div>
 
-          <div>
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
+          <div style={{ position: "relative" }}>
+            <div className="email-field">
+              <label>Email address</label>
+              <div className="email-input-wrapper">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={emailVerified}
+                  required
+                />
+
+                {!emailVerified && (
+                  <button
+                    type="button"
+                    className="send-btn"
+                    onClick={sendOtp}
+                    disabled={emailLoading}
+                  >
+                    {emailLoading ? "SENDING..." : "SEND"}
+                  </button>
+                )}
+              </div>
+
+              {emailVerified && (
+                <span className="verified-text">✔ Email verified</span>
+              )}
+            </div>
+
           </div>
+          {showOtpInput && (
+            <div className="otp-field">
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+              <button type="button" onClick={verifyOtp}>
+                Verify OTP
+              </button>
+            </div>
+          )}
+
 
           <div>
             <label>Password</label>
