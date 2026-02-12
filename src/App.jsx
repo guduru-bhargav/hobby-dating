@@ -20,16 +20,17 @@ function App() {
     <Router>
       <Routes>
 
+        {/* Redirect root to dashboard */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
         {/* Public pages */}
-        <Route path="/" element={<MainPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
         <Route path="/why-us" element={<WhyUs />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/MainPage" element={<MainPage />} />
         <Route path="/ProfileMain" element={<ProfileMain />} />
-         <Route path="/SettingsMain" element={<SettingsMain />} />
-
+        <Route path="/SettingsMain" element={<SettingsMain />} />
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />
