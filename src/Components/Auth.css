@@ -25,8 +25,10 @@
 .auth-container {
   position: relative;
   z-index: 2;
-  width: 100%;
+  width: 90%;
   max-width: 400px;
+  margin: auto;
+  box-sizing: border-box;
 
   max-height: 85vh;     /* 👈 limits height */
   overflow-y: auto;     /* 👈 enables scroll ONLY here */
@@ -65,8 +67,9 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
   font-size: 14px;
-background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
+  box-sizing: border-box;
 }
 
 .auth-container select option {
@@ -143,6 +146,7 @@ background-color: rgba(255, 255, 255, 0.1);
     padding: 24px 16px;
     border-radius: 0;
     margin: auto;
+    box-sizing: border-box;
   }
 
   .auth-container h2 {
@@ -221,6 +225,8 @@ background-color: rgba(255, 255, 255, 0.1);
   .auth-container {
     max-width: 95%;
     padding: 32px 20px;
+    margin: auto;
+    box-sizing: border-box;
   }
 
   .auth-container h2 {
