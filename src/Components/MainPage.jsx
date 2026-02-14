@@ -36,6 +36,13 @@ function MainPage() {
   const [selectedProfile, setSelectedProfile] = useState(null);
   // const [profiles, setProfiles] = useState([]);
   const [users, setUsers] = useState([]);
+  const [filters, setFilters] = useState({
+    age: "",
+    city: "",
+    distance: "",
+    gender: "",
+    hobbies: ""
+  });
   console.log('userProfile', userProfile)
 
   useEffect(() => {
@@ -80,6 +87,12 @@ function MainPage() {
     fetchUserProfile();
   }, []);
 
+  const handleApplyFilters = () => {
+    console.log("Filters applied:", filters);
+    // Add filtering logic here to filter the users array based on selected filters
+    // This can be enhanced to actually filter the profiles array
+  };
+
   return (
     <>
       {/* <Header /> */}
@@ -90,12 +103,60 @@ function MainPage() {
         <div className="filters-bar">
           {/* Filters */}
           <div className="filters">
-            <select><option>Age</option></select>
-            <select><option>City</option></select>
-            <select><option>Distance</option></select>
-            <select><option>Gender</option></select>
-            <select><option>Hobbies</option></select>
-            <button className="filter-btn">Apply</button>
+            <select value={filters.age} onChange={(e) => setFilters({...filters, age: e.target.value})}>
+              <option value="">Age</option>
+              <option value="18-25">18-25</option>
+              <option value="26-35">26-35</option>
+              <option value="36-45">36-45</option>
+              <option value="46+">46+</option>
+            </select>
+
+            <select value={filters.city} onChange={(e) => setFilters({...filters, city: e.target.value})}>
+              <option value="">City</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Kolkata">Kolkata</option>
+              <option value="Ahmedabad">Ahmedabad</option>
+              <option value="Jaipur">Jaipur</option>
+              <option value="Lucknow">Lucknow</option>
+              <option value="Chandigarh">Chandigarh</option>
+              <option value="Indore">Indore</option>
+              <option value="Visakhapatnam">Visakhapatnam</option>
+              <option value="Surat">Surat</option>
+              <option value="Kochi">Kochi</option>
+            </select>
+
+            <select value={filters.distance} onChange={(e) => setFilters({...filters, distance: e.target.value})}>
+              <option value="">Distance</option>
+              <option value="5">5 km</option>
+              <option value="10">10 km</option>
+              <option value="25">25 km</option>
+              <option value="50">50 km</option>
+              <option value="100">100 km</option>
+            </select>
+
+            <select value={filters.gender} onChange={(e) => setFilters({...filters, gender: e.target.value})}>
+              <option value="">Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-binary</option>
+            </select>
+
+            <select value={filters.hobbies} onChange={(e) => setFilters({...filters, hobbies: e.target.value})}>
+              <option value="">Hobbies</option>
+              <option value="Photography">Photography</option>
+              <option value="Music">Music</option>
+              <option value="Travel">Travel</option>
+              <option value="Sports">Sports</option>
+              <option value="Reading">Reading</option>
+              <option value="Gaming">Gaming</option>
+            </select>
+
+            <button className="filter-btn" onClick={handleApplyFilters}>Apply</button>
           </div>
 
           {/* Profile Icon */}
