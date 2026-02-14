@@ -74,14 +74,65 @@ function Signup() {
       return;
     }
 
-    // 3️⃣ Insert profile (optional but recommended)
+    const user = sessionData.session.user;
+
+    // 2.5️⃣ Upload photos to Supabase Storage (bucket: 'profiles')
+    try {
+      const uploadFile = async (file, nameSuffix) => {
+        if (!file) {
+          throw new Error(`${nameSuffix} file is missing`);
+        }
+        if (!file.name) {
+          throw new Error(`${nameSuffix} file object is invalid (no name property). Got: ${typeof file}`);
+        }
+
+        console.log(`Uploading ${nameSuffix}:`, file.name, file.size, file.type);
+
+        const ext = file.name.split('.').pop();
+        const filePath = `${user.id}/${nameSuffix}_${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
+
+        console.log(`${nameSuffix} uploaded successfully:`, urlData.publicUrl);
+        return urlData.publicUrl;
+      };
+
+      const photo1Url = await uploadFile(formData.photo_1, 'photo_1');
+      const photo2Url = await uploadFile(formData.photo_2, 'photo_2');
+
+      // attach urls to formData for DB insert
+      formData.photo_1 = photo1Url;
+      formData.photo_2 = photo2Url;
+    } catch (err) {
+      alert('Photo upload failed: ' + err.message);
+      console.error('Upload error:', err);
+      setLoading(false);
+      return;
+    }
+
+
+    // 3️⃣ Insert profile (including uploaded photo URLs)
     const { error: profileError } = await supabase
       .from("profiles")
       .insert({
-        user_id: authData.user.id,
+        user_id: user.id,
         first_name: formData.first_name,
         gender: formData.gender,
         location_city: formData.location_city,
+        date_of_birth: formData.date_of_birth,
+        gender_preference: formData.gender_preference,
+        hobbies: formData.hobbies,
+        dating_intent: formData.dating_intent,
+        photo_1: formData.photo_1,
+        photo_2: formData.photo_2,
       });
 
     if (profileError) {
