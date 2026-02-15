@@ -189,16 +189,18 @@ function MainPage() {
                     </div>
 
                     <div className="card-info">
-                      <h3>{user.first_name}, {age || 'N/A'}</h3>
                       <button
                         className={`follow-btn ${following.has(user.id) ? 'following' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFollow(user.id);
                         }}
+                        aria-pressed={following.has(user.id)}
+                        aria-label={following.has(user.id) ? 'Unfollow' : 'Follow'}
                       >
                         {following.has(user.id) ? 'Following' : 'Follow'}
                       </button>
+                      <h3>{user.first_name}, {age || 'N/A'}</h3>
                     </div>
                   </div>
                 );

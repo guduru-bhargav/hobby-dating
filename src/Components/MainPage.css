@@ -175,8 +175,9 @@
 
 .card-info {
   height: 30%;
-  padding-top: 1px;
+  padding-top: 26px; /* give space for follow button above the name */
   text-align: center;
+  position: relative;
 }
 
 .card-info h3 {
@@ -185,20 +186,29 @@
   margin-bottom: 6px; 
 }
 
-.follow-btn {
-  display: block;
-  margin: 8px auto 0;
-  padding: 8px 14px;
-  background: #2575fc;
+.profile-card {
+  position: relative;
+}
+
+/* place follow button inside card-info above the name/age */
+.card-info .follow-btn {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: rgba(37,117,252,0.95);
   color: #fff;
   border: none;
-  border-radius: 20px;
+  border-radius: 18px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  z-index: 5;
+  display: inline-block;
 }
 
 .follow-btn.following {
-  background: #4caf50;
+  background: rgba(76,175,80,0.95);
 }
 
 /* ===== MOBILE RESPONSIVE STYLES ===== */
