@@ -4,38 +4,12 @@ import ProfileMenu from "./ProfileMenu";
 import ChatBox from "./ChatBox";
 import { supabase } from "../lib/supabase";
 
-const profiles = [
-  { id: 1, name: "Josh", age: 28, image: "https://i.pravatar.cc/300?img=1" },
-  { id: 2, name: "Anna", age: 25, image: "https://i.pravatar.cc/300?img=2" },
-  { id: 3, name: "Mike", age: 30, image: "https://i.pravatar.cc/300?img=3" },
-  { id: 4, name: "Sophia", age: 27, image: "https://i.pravatar.cc/300?img=4" },
-  { id: 5, name: "James", age: 29, image: "https://i.pravatar.cc/300?img=5" },
-  { id: 6, name: "Emma", age: 26, image: "https://i.pravatar.cc/300?img=6" },
-  { id: 7, name: "Josh", age: 28, image: "https://i.pravatar.cc/300?img=1" },
-  { id: 8, name: "Anna", age: 25, image: "https://i.pravatar.cc/300?img=2" },
-  { id: 9, name: "Mike", age: 30, image: "https://i.pravatar.cc/300?img=3" },
-  { id: 10, name: "Sophia", age: 27, image: "https://i.pravatar.cc/300?img=4" },
-  { id: 11, name: "James", age: 29, image: "https://i.pravatar.cc/300?img=5" },
-  { id: 12, name: "Emma", age: 26, image: "https://i.pravatar.cc/300?img=6" },
-  { id: 13, name: "Josh", age: 28, image: "https://i.pravatar.cc/300?img=1" },
-  { id: 14, name: "Anna", age: 25, image: "https://i.pravatar.cc/300?img=2" },
-  { id: 15, name: "Mike", age: 30, image: "https://i.pravatar.cc/300?img=3" },
-  { id: 16, name: "Sophia", age: 27, image: "https://i.pravatar.cc/300?img=4" },
-  { id: 17, name: "James", age: 29, image: "https://i.pravatar.cc/300?img=5" },
-  { id: 18, name: "Emma", age: 26, image: "https://i.pravatar.cc/300?img=6" },
-  { id: 19, name: "Josh", age: 28, image: "https://i.pravatar.cc/300?img=1" },
-  { id: 20, name: "Anna", age: 25, image: "https://i.pravatar.cc/300?img=2" },
-  { id: 21, name: "Mike", age: 30, image: "https://i.pravatar.cc/300?img=3" },
-  { id: 22, name: "Sophia", age: 27, image: "https://i.pravatar.cc/300?img=4" },
-  { id: 23, name: "James", age: 29, image: "https://i.pravatar.cc/300?img=5" },
-  { id: 24, name: "Emma", age: 26, image: "https://i.pravatar.cc/300?img=6" }
-];
-
 function MainPage() {
   const [userProfile, setUserProfile] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
   // const [profiles, setProfiles] = useState([]);
   const [users, setUsers] = useState([]);
+  const [following, setFollowing] = useState(new Set());
   const [filters, setFilters] = useState({
     age: "",
     city: "",
@@ -45,10 +19,23 @@ function MainPage() {
   });
   console.log('userProfile', userProfile)
 
+  // Helper function to calculate age from date_of_birth
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       const { data, error } = await supabase
-        .from("all_users")
+        .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -86,6 +73,16 @@ function MainPage() {
 
     fetchUserProfile();
   }, []);
+
+  const toggleFollow = (id) => {
+    setFollowing((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    console.log("Toggled follow for", id);
+  };
 
   const handleApplyFilters = () => {
     console.log("Filters applied:", filters);
@@ -168,25 +165,49 @@ function MainPage() {
         {/* Profiles Grid */}
         <div className="profiles-scroll">
           <div className="profiles-grid">
-            {profiles.map((profile) => (
-              <div
-                className="profile-card"
-                key={profile.id}
-                onClick={() => setSelectedProfile(users)} // 👈 OPEN CHAT
-              >
-                <div className="card-image">
-                  <img src={profile.image} alt={profile.name} />
-                </div>
+            {users && users.length > 0 ? (
+              users.map((user) => {
+                const age = calculateAge(user.date_of_birth);
+                return (
+                  <div
+                    className="profile-card"
+                    key={user.id}
+                    onClick={() => setSelectedProfile(user)}
+                  >
+                    <div className="card-image">
+                      <img 
+                        src={user.photo_1 || "https://i.pravatar.cc/300?img=1"} 
+                        alt={user.first_name} 
+                      />
+                    </div>
 
-                <div className="avatar">
-                  <img src={profile.image} alt={profile.name} />
-                </div>
+                    <div className="avatar">
+                      <img 
+                        src={user.photo_2 || "https://i.pravatar.cc/300?img=1"} 
+                        alt={user.first_name} 
+                      />
+                    </div>
 
-                <div className="card-info">
-                  <h3>{users.full_name || 'Bhargav'}, {profile.age}</h3>
-                </div>
-              </div>
-            ))}
+                    <div className="card-info">
+                      <h3>{user.first_name}, {age || 'N/A'}</h3>
+                      <button
+                        className={`follow-btn ${following.has(user.id) ? 'following' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFollow(user.id);
+                        }}
+                      >
+                        {following.has(user.id) ? 'Following' : 'Follow'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p style={{ color: "#666", textAlign: "center", padding: "20px" }}>
+                No users found
+              </p>
+            )}
           </div>
         </div>
 
