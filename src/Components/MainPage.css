@@ -145,7 +145,7 @@
 
 /* Top image collage */
 .card-image {
-  height: 70%;
+  height: 170px;
   width: 100%;
 }
 
@@ -157,7 +157,7 @@
 
 .avatar {
   position: absolute;
-  top: calc(70% - 26px);
+  top: calc(60% - 30px);
   left: 50%;
   transform: translateX(-50%);
   background: #fff;
@@ -167,15 +167,15 @@
 }
 
 .avatar img {
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .card-info {
   height: 30%;
-  padding-top: 12px;
+  padding-top: 1px;
   text-align: center;
 }
 
@@ -183,6 +183,22 @@
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 6px; 
+}
+
+.follow-btn {
+  display: block;
+  margin: 8px auto 0;
+  padding: 8px 14px;
+  background: #2575fc;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.follow-btn.following {
+  background: #4caf50;
 }
 
 /* ===== MOBILE RESPONSIVE STYLES ===== */
