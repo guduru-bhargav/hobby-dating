@@ -1,63 +1,94 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./ProfileMain.css";
+import { supabase } from "../lib/supabase";
 
 function ProfileMain() {
-    // Hardcoded user data for now
-    const userProfile = {
-        first_name: "John",
-        age: 28,
-        gender: "Male",
-        location_city: "San Francisco",
-        hobbies: ["Photography", "Music", "Travel"],
-        dating_intent: "Serious Relationship",
-        profile_photo_main: "https://i.pravatar.cc/300?img=3",
-        cover_photo: "https://picsum.photos/800/200", // optional banner
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      setLoading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error loading profile:", error);
+      } else {
+        setProfile(data);
+      }
+      setLoading(false);
     };
 
-    return (
-        <div className="profile-main">
-            {/* Cover Photo */}
-            <div className="cover-photo">
-                <img src={userProfile.cover_photo} alt="Cover" />
-            </div>
+    loadProfile();
+  }, []);
 
-            {/* Avatar */}
-            <div className="avatar-container-Styles">
-                <img className="avatar-Styles" src={userProfile.profile_photo_main} alt="Avatar" />
-            </div>
+  if (loading) return <div className="profile-main">Loading...</div>;
 
-            {/* Basic Info */}
-            <div className="basic-info">
-                <h2>
-                    {userProfile.first_name}, {userProfile.age}
-                </h2>
-                <p>
-                    {userProfile.gender} | {userProfile.location_city}
-                </p>
-            </div>
+  if (!profile) return <div className="profile-main">No profile found.</div>;
 
-            {/* Hobbies & Interests */}
-            <div className="hobbies-section">
-                <h3>Hobbies & Interests</h3>
-                <ul>
-                    {userProfile.hobbies.map((hobby, index) => (
-                        <li key={index}>{hobby}</li>
-                    ))}
-                </ul>
-            </div>
+  const hobbies = Array.isArray(profile.hobbies)
+    ? profile.hobbies
+    : (profile.hobbies || "").split(",").map((s) => s.trim()).filter(Boolean);
 
-            {/* Dating Intent */}
-            <div className="dating-intent">
-                <h3>Looking for:</h3>
-                <p>{userProfile.dating_intent}</p>
-            </div>
+  const age = profile.date_of_birth
+    ? (() => {
+        const bd = new Date(profile.date_of_birth);
+        const now = new Date();
+        let a = now.getFullYear() - bd.getFullYear();
+        const m = now.getMonth() - bd.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < bd.getDate())) a--;
+        return a;
+      })()
+    : "N/A";
 
-            {/* Edit Profile Button */}
-            <div className="edit-button-container">
-                <button className="btn-edit">Edit Profile</button>
-            </div>
+  return (
+    <div className="profile-main">
+      {/* Cover Photo - use photo_1 as a banner fallback to a placeholder */}
+      <div className="cover-photo">
+        <img src={profile.photo_1 || profile.cover_photo || "https://picsum.photos/800/200"} alt="Cover" />
+      </div>
+
+      {/* Avatar - show photo_2 as requested */}
+      <div className="avatar-container-Styles">
+        <img className="avatar-Styles" src={profile.photo_2 || profile.photo_1 || "https://i.pravatar.cc/300?img=3"} alt="Avatar" />
+      </div>
+
+      {/* Basic Info */}
+      <div className="basic-info">
+        <h2>{profile.first_name || "User"}, {age}</h2>
+        <p className="meta">{profile.gender || ""} {profile.location_city ? `• ${profile.location_city}` : ""}</p>
+
+        <div className="hobbies">
+          <h4>Hobbies</h4>
+          <ul>
+            {hobbies.length ? hobbies.map((h) => (
+              <li key={h}>{h}</li>
+            )) : <li>Not specified</li>}
+          </ul>
         </div>
-    );
+
+        <div className="dating-intent">
+          <h3>Looking for:</h3>
+          <p>{profile.dating_intent || "Not specified"}</p>
+        </div>
+
+        <div className="edit-button-container">
+          <button className="btn-edit">Edit Profile</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default ProfileMain;
