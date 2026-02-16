@@ -34,10 +34,16 @@ function MainPage() {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Exclude the logged-in user's profile from the browse list
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id;
+
+      let query = supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      if (currentUserId) {
+        query = query.neq("user_id", currentUserId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching users:", error);
