@@ -28,20 +28,39 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/why-us" element={<WhyUs />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/MainPage" element={<MainPage />} />
-        <Route path="/ProfileMain" element={<ProfileMain />} />
-        <Route path="/SettingsMain" element={<SettingsMain />} />
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected Dashboard */}
+        {/* Public Dashboard (landing page) */}
         <Route
           path="/dashboard"
+          element={<Dashboard />}
+        />
+
+        {/* Protected routes - only accessible after login */}
+        <Route
+          path="/MainPage"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <MainPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ProfileMain"
+          element={
+            <ProtectedRoute>
+              <ProfileMain />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/SettingsMain"
+          element={
+            <ProtectedRoute>
+              <SettingsMain />
             </ProtectedRoute>
           }
         />

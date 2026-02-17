@@ -17,9 +17,10 @@
 
 
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 
 const profiles = [
@@ -53,7 +54,25 @@ const successStories = [
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const checkAuth = async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user) {
+          // User is logged in, redirect to MainPage
+          navigate("/MainPage", { replace: true });
+        } else {
+          // Not logged in, show landing page
+          setLoading(false);
+        }
+      };
+      checkAuth();
+    }, [navigate]);
     return (
+        <>
+          {loading && <p>Checking authentication...</p>}
+          {!loading && (
         <div className="dashboard">
             <header className="header container">
                 <div className="logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>
@@ -252,5 +271,7 @@ export default function Dashboard() {
                 </div>
             </footer>
         </div>
+          )}
+        </>
     );
 }
