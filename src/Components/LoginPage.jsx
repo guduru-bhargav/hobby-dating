@@ -16,34 +16,46 @@ function Login() {
     setErrorMsg("");
 
     try {
-      // 1️⃣ Log in user via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // 1️⃣ Log in user
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+      // ✅ Correct logging
+      console.log("LOGIN DATA:", authData);
+      console.log("LOGIN ERROR:", authError);
 
       if (authError) throw authError;
 
-      if (!authData.user) {
+      if (!authData?.user) {
         throw new Error("Login failed. User not found.");
       }
 
-      // 2️⃣ Fetch the user's profile (maybeSingle avoids error if row doesn't exist)
+      // 2️⃣ Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", authData.user.id)
-        .maybeSingle(); // ✅ changed from .single() to maybeSingle()
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
       console.log("Logged in profile:", profile);
 
-      // 3️⃣ Navigate to dashboard/main page
+      // Optional: handle missing profile
+      if (!profile) {
+        console.warn("Profile not found for user");
+        // You could auto-create profile here if needed
+      }
+
+      // 3️⃣ Navigate
       navigate("/MainPage");
+
     } catch (err) {
-      setErrorMsg(err.message);
       console.error("Login error:", err);
+      setErrorMsg(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -59,6 +71,7 @@ function Login() {
 
       <div className="auth-container">
         <h2>Login</h2>
+
         <form onSubmit={handleSubmit}>
           <div>
             <label>Email</label>
@@ -84,12 +97,20 @@ function Login() {
             {loading ? "Logging in..." : "Login"}
           </button>
 
-          {errorMsg && <p style={{ color: "red", marginTop: "8px" }}>{errorMsg}</p>}
+          {errorMsg && (
+            <p style={{ color: "red", marginTop: "8px" }}>
+              {errorMsg}
+            </p>
+          )}
         </form>
 
         <p style={{ marginTop: "12px" }}>
           Don’t have an account? <Link to="/signup">Sign Up</Link>
         </p>
+        <p>
+  <Link to="/forgot-password">Forgot Password?</Link>
+</p>
+
       </div>
     </div>
   );

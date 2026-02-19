@@ -14,6 +14,8 @@ import MainPage from "./Components/MainPage";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import ProfileMain from "./Components/ProfileMain";
 import SettingsMain from "./Components/SettingsMain";
+import ForgotPassword from "./Components/ForgotPassword";
+import ResetPassword from "./Components/ResetPassword";
 
 function App() {
   return (
@@ -28,6 +30,10 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/why-us" element={<WhyUs />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />
