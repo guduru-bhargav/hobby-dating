@@ -194,6 +194,19 @@ function ChatBox({ profile, onClose }) {
       sendMessage();
     }
   };
+useEffect(() => {
+  if (!conversation?.id || !currentUser?.id) return;
+
+  markAsRead();
+}, [conversation?.id]);
+
+const markAsRead = async () => {
+  await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("conversation_id", conversation.id)
+    .eq("user_id", currentUser.id);
+};
 
   return (
     <div className="chat-overlay" onClick={onClose}>

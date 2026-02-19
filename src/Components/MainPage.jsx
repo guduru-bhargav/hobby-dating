@@ -17,7 +17,59 @@ function MainPage() {
     gender: "",
     hobbies: ""
   });
-  console.log('userProfile', userProfile)
+   const [currentUser, setCurrentUser] = useState(null);
+   const [notifications, setNotifications] = useState([]);
+
+
+   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUser(data.user);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const channel = supabase
+      .channel("notifications_listener")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${currentUser.id}`,
+        },
+        (payload) => {
+          console.log("🔔 New notification:", payload.new);
+
+          alert("💬 New message received!");
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+  if (!currentUser?.id) return;
+
+  fetchNotifications();
+}, [currentUser?.id]);
+
+const fetchNotifications = async () => {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .eq("is_read", false);
+
+  if (!error) {
+    setNotifications(data || []);
+  }
+};
+
+
 
   // Helper function to calculate age from date_of_birth
   const calculateAge = (dateOfBirth) => {
@@ -163,7 +215,7 @@ function MainPage() {
           </div>
 
           {/* Profile Icon */}
-          <ProfileMenu />
+          <ProfileMenu unreadCount={notifications.length}/>
 
         </div>
 
@@ -219,20 +271,15 @@ function MainPage() {
           </div>
         </div>
 
-        {/* Footer CTA */}
-        <div className="cta">
-          <p>Ready to get started?</p>
-          <button className="btn-gradient">Get Matched</button>
-        </div>
+      
 
       </div>
-      {/* Chat Modal */}
       {selectedProfile && (
 
 
         <ChatBox
           profile={selectedProfile}
-          currentUser={users} // <-- make sure this is the logged-in user object from Supabase
+          currentUser={currentUser} // <-- make sure this is the logged-in user object from Supabase
           onClose={() => setSelectedProfile(null)}
         />
       )}

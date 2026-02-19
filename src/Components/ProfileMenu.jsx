@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "./ProfileMenu.css";
 
-function ProfileMenu() {
+function ProfileMenu({ unreadCount }) {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
@@ -37,7 +37,11 @@ function ProfileMenu() {
 
   return (
     <div className="profile-wrapper">
-      <span className="notification-badge">3</span>
+{unreadCount > 0 && (
+  <span className="notification-badge">
+    {unreadCount}
+  </span>
+)}
 
       <div className="profile-icon" onClick={() => setOpen(!open)}>
         <img className="primary-img" src={img1} alt="Primary" />
