@@ -51,6 +51,12 @@ function Login() {
 
   return (
     <div className="auth-wrapper">
+      <Link to="/dashboard" className="auth-logo-link">
+        <div className="auth-logo">
+          <span className="logo-icon">Hobby Base💕</span>
+        </div>
+      </Link>
+
       <div className="auth-container">
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>

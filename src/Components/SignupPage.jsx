@@ -194,6 +194,14 @@ function Signup() {
 
   return (
     <div className="auth-wrapper">
+      <Link to="/dashboard" className="auth-logo-link">
+        <div className="auth-logo">
+          <div className="logo-text">Hobby Base💕</div>
+        </div>
+      </Link>
+
+
+
       <div className="auth-container">
         <h2>Sign Up</h2>
 
@@ -354,7 +362,7 @@ function Signup() {
           <div className="modal-content">
             <h3>Verify Your Email</h3>
             <p>OTP received to this email, please verify the OTP</p>
-            
+
             <div className="modal-email-display">
               <small>{formData.email}</small>
             </div>
