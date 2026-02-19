@@ -2,91 +2,197 @@ import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import "./ChatBox.css";
 
-function ChatBox({ profile, currentUser, onClose }) {
+function ChatBox({ profile, onClose }) {
+  const [authUser, setAuthUser] = useState(null);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
-  console.log('currentUser,currentUser',currentUser);
-  
 
-  // Scroll to bottom whenever messages change
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  useEffect(scrollToBottom, [messages]);
 
-  // 1️⃣ Fetch or create conversation
   useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // ✅ Get logged-in user directly from Supabase
+  useEffect(() => {
+    const getUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        console.warn("⚠ No authenticated user");
+        return;
+      }
+
+      console.log("✅ Auth user:", data.user.id);
+      setAuthUser(data.user);
+    };
+
+    getUser();
+  }, []);
+
+  // 1️⃣ Fetch / Create Conversation
+  useEffect(() => {
+    if (!authUser?.id || !profile?.id) return;
+
     const initChat = async () => {
-      const { data: existing } = await supabase
+      console.log("🚀 InitChat running");
+
+      const userA = authUser.id;
+      const userB = profile.user_id;
+
+      console.log("UserA:", userA);
+      console.log("UserB:", userB);
+
+      // 🔍 Check if conversation already exists
+      const { data: existing, error } = await supabase
         .from("conversations")
         .select("*")
         .or(
-          `user1.eq.${currentUser.id},user1.eq.${profile.id},user2.eq.${currentUser.id},user2.eq.${profile.id}`
+          `and(user1.eq.${userA},user2.eq.${userB}),and(user1.eq.${userB},user2.eq.${userA})`
         )
         .maybeSingle();
 
-      if (existing) setConversation(existing);
-      else {
-        const { data: newConv, error } = await supabase
-          .from("conversations")
-          .insert([{ user1: currentUser.id, user2: profile.id }])
-          .single();
-        if (error) console.error("Error creating conversation:", error);
-        else setConversation(newConv);
+      if (error) {
+        console.error("❌ Fetch conversation error:", error);
+        return;
+      }
+
+      if (existing) {
+        console.log("✅ Found existing conversation");
+        setConversation(existing);
+        return;
+      }
+
+      console.log("✨ Creating new conversation");
+
+      const { data: newConv, error: insertError } = await supabase
+        .from("conversations")
+        .insert({
+          user1: userA,
+          user2: userB,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("❌ Conversation insert failed:", insertError);
+      } else {
+        console.log("✅ Conversation created:", newConv);
+        setConversation(newConv);
       }
     };
 
     initChat();
-  }, [currentUser, profile]);
+  }, [authUser?.id, profile?.id]);
 
-  // 2️⃣ Fetch messages and subscribe
+  // 2️⃣ Fetch Messages + Realtime
   useEffect(() => {
-    if (!conversation) return;
+    if (!conversation?.id) return;
+
+    let channel;
 
     const fetchMessages = async () => {
-      const { data: msgs, error } = await supabase
+      console.log("📥 Fetching messages");
+
+      const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversation.id)
         .order("created_at", { ascending: true });
 
-      if (error) console.error("Error fetching messages:", error);
-      else setMessages(msgs || []);
+      if (error) {
+        console.error("❌ Messages fetch error:", error);
+      } else {
+        setMessages(data || []);
+      }
     };
 
     fetchMessages();
 
-    // Real-time subscription
-    const subscription = supabase
-      .channel(`conversation_${conversation.id}`)
+    channel = supabase
+      .channel(`chat_${conversation.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversation.id}` },
-        (payload) => setMessages((prev) => [...prev, payload.new])
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversation.id}`,
+        },
+        (payload) => {
+          console.log("⚡ Realtime message:", payload.new);
+
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === payload.new.id)) return prev;
+            return [...prev, payload.new];
+          });
+        }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(subscription);
+      if (channel) supabase.removeChannel(channel);
     };
-  }, [conversation]);
+  }, [conversation?.id]);
 
-  // 3️⃣ Send message
+  // 3️⃣ Send Message
   const sendMessage = async () => {
-    if (!newMessage || !conversation) return;
+    if (!newMessage.trim()) return;
+    if (!conversation?.id || !authUser?.id || sending) return;
 
-    const { error } = await supabase.from("messages").insert([
-      {
+    const tempId = Date.now();
+
+    const optimisticMessage = {
+      id: tempId,
+      conversation_id: conversation.id,
+      sender_id: authUser.id,
+      message: newMessage,
+      status: "sending",
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setNewMessage("");
+    setSending(true);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
         conversation_id: conversation.id,
-        sender_id: currentUser.id,
-        message: newMessage,
-      },
-    ]);
+        sender_id: authUser.id,
+        message: optimisticMessage.message,
+      })
+      .select()
+      .single();
 
-    if (error) console.error("Error sending message:", error);
-    else setNewMessage(""); // clear input
+    if (error) {
+      console.error("❌ Send error:", error);
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === tempId ? { ...msg, status: "failed" } : msg
+        )
+      );
+    } else {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === tempId ? { ...data, status: "sent" } : msg
+        )
+      );
+    }
+
+    setSending(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   return (
@@ -100,14 +206,24 @@ function ChatBox({ profile, currentUser, onClose }) {
 
         <div className="chat-messages">
           {messages.map((msg) => (
-            <p
+            <div
               key={msg.id}
-              className={`message ${
-                msg.sender_id === currentUser.id ? "sent" : "received"
+              className={`message-wrapper ${
+                msg.sender_id === authUser?.id ? "sent" : "received"
               }`}
             >
-              {msg.message}
-            </p>
+              <p className={`message ${msg.status || ""}`}>
+                {msg.message}
+              </p>
+
+              {msg.status === "sending" && (
+                <span className="message-status">Sending...</span>
+              )}
+
+              {msg.status === "failed" && (
+                <span className="message-status failed">Failed</span>
+              )}
+            </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
@@ -117,9 +233,12 @@ function ChatBox({ profile, currentUser, onClose }) {
             placeholder="Type a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={handleKeyDown}
+            disabled={sending}
           />
-          <button onClick={sendMessage}>Send</button>
+          <button onClick={sendMessage} disabled={sending}>
+            {sending ? "..." : "Send"}
+          </button>
         </div>
       </div>
     </div>
