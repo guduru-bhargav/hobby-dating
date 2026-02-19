@@ -199,8 +199,8 @@ function ChatBox({ profile, onClose }) {
     <div className="chat-overlay" onClick={onClose}>
       <div className="chat-box" onClick={(e) => e.stopPropagation()}>
         <div className="chat-header">
-          <img src={profile.image} alt={profile.name} />
-          <h4>{profile.name}</h4>
+          <img src={profile.photo_2} alt={profile.photo_1} />
+          <h4>{profile.first_name}</h4>
           <button onClick={onClose}>✕</button>
         </div>
 
