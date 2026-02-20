@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import "./ChatBox.css";
 
-function ChatBox({ profile, onClose }) {
+function ChatBox({ profile, onClose, currentUser }) {
   const [authUser, setAuthUser] = useState(null);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -194,19 +194,19 @@ function ChatBox({ profile, onClose }) {
       sendMessage();
     }
   };
-useEffect(() => {
-  if (!conversation?.id || !currentUser?.id) return;
+  useEffect(() => {
+    if (!conversation?.id || !currentUser?.id) return;
 
-  markAsRead();
-}, [conversation?.id]);
+    markAsRead();
+  }, [conversation?.id]);
 
-const markAsRead = async () => {
-  await supabase
-    .from("notifications")
-    .update({ is_read: true })
-    .eq("conversation_id", conversation.id)
-    .eq("user_id", currentUser.id);
-};
+  const markAsRead = async () => {
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("conversation_id", conversation.id)
+      .eq("user_id", currentUser.id);
+  };
 
   return (
     <div className="chat-overlay" onClick={onClose}>
@@ -221,9 +221,8 @@ const markAsRead = async () => {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`message-wrapper ${
-                msg.sender_id === authUser?.id ? "sent" : "received"
-              }`}
+              className={`message-wrapper ${msg.sender_id === authUser?.id ? "sent" : "received"
+                }`}
             >
               <p className={`message ${msg.status || ""}`}>
                 {msg.message}

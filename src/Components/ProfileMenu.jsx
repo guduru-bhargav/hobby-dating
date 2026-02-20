@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "./ProfileMenu.css";
 
-function ProfileMenu({ unreadCount }) {
+function ProfileMenu({ unreadCount, currentUser }) {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
@@ -37,35 +37,28 @@ function ProfileMenu({ unreadCount }) {
 
   return (
     <div className="profile-wrapper">
-{unreadCount > 0 && (
-  <span className="notification-badge">
-    {unreadCount}
-  </span>
-)}
+      {unreadCount > 0 && (
+        <span className="notification-badge">
+          {unreadCount}
+        </span>
+      )}
+      <div className="sidebar-header">
+        <div className="profile-wrapper">
+          <div className="profile-icon" onClick={() => setOpen(!open)}>
+            <img className="primary-img" src={img1} alt="Primary" />
+            <span className="online-dot"></span>
+          </div>
+        </div>
 
-      <div className="profile-icon" onClick={() => setOpen(!open)}>
-        <img className="primary-img" src={img1} alt="Primary" />
-       
-        <span className="online-dot"></span>
+        <h2 className="sidebar-title">{profile?.first_name || null}</h2>
+      </div>
+      <div className="profile-dropdown">
+
+        <button onClick={() => navigate("/ProfileMain")}>Profile</button>
+        <button onClick={() => navigate("/SettingsMain")}>Settings</button>
+        <button onClick={handleLogout}>Logout</button>
       </div>
 
-      {open && (
-        <div className="profile-dropdown">
-          <div className="dropdown-header">
-            <div className="dropdown-avatars">
-              <img src={img1} alt="p1" />
-            </div>
-            <div className="dropdown-info">
-              <strong>{profile?.first_name || "You"}</strong>
-              <small>{profile?.location_city || ""}</small>
-            </div>
-          </div>
-
-          <button onClick={() => navigate("/ProfileMain")}>Profile</button>
-          <button onClick={() => navigate("/SettingsMain")}>Settings</button>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      )}
     </div>
   );
 }
