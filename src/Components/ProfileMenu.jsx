@@ -1,13 +1,9 @@
-
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "./ProfileMenu.css";
 
-function ProfileMenu({ unreadCount, currentUser }) {
-  const [open, setOpen] = useState(false);
+function ProfileMenu({ unreadCount, currentUser, onNavigate, activeView }) {
   const [profile, setProfile] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const load = async () => {
@@ -29,39 +25,65 @@ function ProfileMenu({ unreadCount, currentUser }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/login");
+    window.location.href = "/login";
   };
 
   const img1 = profile?.photo_1 || "https://i.pravatar.cc/100?img=12";
-  const img2 = profile?.photo_2 || profile?.photo_1 || "https://i.pravatar.cc/101?img=13";
 
   return (
     <div className="profile-wrapper">
-      {unreadCount > 0 && (
-        <span className="notification-badge">
-          {unreadCount}
-        </span>
-      )}
       <div className="sidebar-header">
-        <div className="profile-wrapper">
-          <div className="profile-icon" onClick={() => setOpen(!open)}>
-            <img className="primary-img" src={img1} alt="Primary" />
-            <span className="online-dot"></span>
-          </div>
+        <div className="profile-icon">
+          <img className="primary-img" src={img1} alt="Profile" />
+          <span className="online-dot"></span>
+
+          {unreadCount > 0 && (
+            <span className="notification-badge">{unreadCount}</span>
+          )}
         </div>
 
-        <h2 className="sidebar-title">{profile?.first_name || null}</h2>
-      </div>
-      <div className="profile-dropdown">
-
-        <button onClick={() => navigate("/ProfileMain")}>Profile</button>
-        <button onClick={() => navigate("/SettingsMain")}>Settings</button>
-        <button onClick={handleLogout}>Logout</button>
+        <h2 className="sidebar-title">
+          {profile?.first_name || "User"}
+        </h2>
       </div>
 
+      <nav className="sidebar-menu">
+
+        <button
+          className={activeView === "follow" ? "active" : ""}
+          onClick={() => onNavigate("follow")}
+        >
+          ❤️ Follow
+        </button>
+
+        <button
+          className={activeView === "chat" ? "active" : ""}
+          onClick={() => onNavigate("chat")}
+        >
+          💬 Chat
+        </button>
+
+        <button
+          className={activeView === "profile" ? "active" : ""}
+          onClick={() => onNavigate("profile")}
+        >
+          👤 Profile
+        </button>
+
+        <button
+          className={activeView === "settings" ? "active" : ""}
+          onClick={() => onNavigate("settings")}
+        >
+          ⚙ Settings
+        </button>
+
+        <button className="logout" onClick={handleLogout}>
+          🚪 Logout
+        </button>
+
+      </nav>
     </div>
   );
 }
 
 export default ProfileMenu;
-

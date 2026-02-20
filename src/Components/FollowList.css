@@ -1,0 +1,85 @@
+.follow-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.follow-main {
+  flex: 1;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.notifications-banner {
+  background: #111;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.profiles-scroll {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.profiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 16px;
+  padding: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
+
+.profile-card:hover {
+  transform: translateY(-4px);
+}
+
+.card-image img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.avatar {
+  position: absolute;
+  bottom: 60px;
+  right: 15px;
+}
+
+.avatar img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid white;
+}
+
+.card-info {
+  margin-top: 10px;
+}
+
+.follow-btn {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  background: #eee;
+}
+
+.follow-btn.following {
+  background: black;
+  color: white;
+}
+
+.no-users {
+  text-align: center;
+  color: #666;
+}

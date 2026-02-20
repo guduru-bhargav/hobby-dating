@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./ProfileMain.css";
 import { supabase } from "../lib/supabase";
+import ProfileMenu from "./ProfileMenu";
 
 function ProfileMain() {
   const [profile, setProfile] = useState(null);

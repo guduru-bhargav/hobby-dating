@@ -361,14 +361,19 @@ background: linear-gradient(135deg, #FFDEE9, #B5FFFC);
 
 /* Sidebar – Always Visible */
 .sidebar {
-  width: 30%;
+  width: 40%;
   min-width: 240px;
   max-width: 300px;
   color: white;
   display: flex;
   flex-direction: column;
 }
-
+.main-content {
+  /* flex: 1; */
+  width: 100%;
+  padding: 20px;
+  overflow-y: auto;
+}
 
 .sidebar-header {
   display: flex;
