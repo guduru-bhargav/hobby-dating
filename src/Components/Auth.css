@@ -5,11 +5,19 @@
   align-items: center;
   width: 100vw;
   height: 100vh;
-  background-image: url('../assets/hobbyjpeg.jpeg');
-  background-size: cover;
+  /* background-image: url('../assets/hobbyjpeg.jpeg'); */
+    background-image: url("/src/assets/dashHBA.jpeg");
+    /* background: linear-gradient(135deg, #FCE4EC, #E3F2FD); */
+    /* background: linear-gradient(135deg, #E0F7FA, #E3F2FD); */
+    /* background: linear-gradient(135deg, #4C1D95, #7C3AED);
+     */
+     /* background: linear-gradient(135deg, #0F172A, #1E3A8A); */
+     /* background: linear-gradient(135deg, #9D174D, #6D28D9); */
+/* background: linear-gradient(135deg, #FFDEE9, #B5FFFC); */
+  /* background-size: cover;
   background-position: center;
-  position: relative;
-  overflow: hidden; /* prevent page scrolling */
+  position: relative; */
+  overflow: hidden; 
 }
 
 /* Dark overlay so form is readable */
@@ -17,7 +25,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  /* background: rgba(0, 0, 0, 0.5); */
   z-index: 1;
 }
 
@@ -37,7 +45,9 @@
 
   padding: 40px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.6);
+  /* background: rgba(0, 0, 0, 0.6); */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+
   font-family: Arial, sans-serif;
   color: #fff;
 }
