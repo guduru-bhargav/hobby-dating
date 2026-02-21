@@ -435,3 +435,22 @@ background: linear-gradient(135deg, #FFDEE9, #B5FFFC);
 
   object-fit: cover;
 }
+
+.side-menu {
+  display: block;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 70px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+}

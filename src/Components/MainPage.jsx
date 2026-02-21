@@ -8,6 +8,7 @@ import SettingsMain from "./SettingsMain";
 import ChatList from "./ChatList";
 import FollowList from "./FollowList";
 import ChatBox from "./ChatBox";
+import BottomNav from "./BottomNav";
 
 function MainPage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -167,6 +168,15 @@ function MainPage() {
       <main className="main-content">
         {renderContent()}
       </main>
+      <div className="layout">
+
+        {/* ✅ Bottom Navigation (Mobile Only) */}
+        <BottomNav
+          activeView={activeView}
+          onNavigate={setActiveView}
+          unreadCount={notifications.length}
+        />
+      </div>
 
       {/* ✅ Global ChatBox (optional if not inside FollowList) */}
       {selectedProfile && (
