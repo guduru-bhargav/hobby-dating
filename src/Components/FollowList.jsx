@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import ChatBox from "./ChatBox";
+import "./FollowList.css";
 
 function FollowList({
   users,
@@ -11,101 +12,167 @@ function FollowList({
   currentUser,
   filters,
   setFilters,
-  handleApplyFilters,
 }) {
+  const [showFilters, setShowFilters] = useState(false);
+  const [openSection, setOpenSection] = useState(null);
+
+  const toggleSection = (section) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
+  const handleCheckbox = (category, value) => {
+    const prevValues = filters[category] || [];
+    const updated = prevValues.includes(value)
+      ? prevValues.filter((v) => v !== value)
+      : [...prevValues, value];
+
+    setFilters({ ...filters, [category]: updated });
+  };
+
   return (
     <>
-      {/* Filters */}
-      <div className="filters-bar">
-        <div className="filters">
-          <select
-            value={filters.age}
-            onChange={(e) =>
-              setFilters({ ...filters, age: e.target.value })
-            }
-          >
-            <option value="">Age</option>
-            <option value="18-25">18-25</option>
-            <option value="26-35">26-35</option>
-            <option value="36-45">36-45</option>
-            <option value="46+">46+</option>
-          </select>
+      {/* ✅ HEADER */}
+      <div className="follow-header">
+        <h2>Hobby Dating</h2>
 
-          <select
-            value={filters.city}
-            onChange={(e) =>
-              setFilters({ ...filters, city: e.target.value })
-            }
-          >
-            <option value="">City</option>
-            <option value="Mumbai">Mumbai</option>
-            <option value="Delhi">Delhi</option>
-            <option value="Bangalore">Bangalore</option>
-            <option value="Hyderabad">Hyderabad</option>
-            <option value="Pune">Pune</option>
-            <option value="Chennai">Chennai</option>
-            <option value="Kolkata">Kolkata</option>
-            <option value="Ahmedabad">Ahmedabad</option>
-            <option value="Jaipur">Jaipur</option>
-            <option value="Lucknow">Lucknow</option>
-            <option value="Chandigarh">Chandigarh</option>
-            <option value="Indore">Indore</option>
-            <option value="Visakhapatnam">Visakhapatnam</option>
-            <option value="Surat">Surat</option>
-            <option value="Kochi">Kochi</option>
-          </select>
-
-          <select
-            value={filters.distance}
-            onChange={(e) =>
-              setFilters({ ...filters, distance: e.target.value })
-            }
-          >
-            <option value="">Distance</option>
-            <option value="5">5 km</option>
-            <option value="10">10 km</option>
-            <option value="25">25 km</option>
-            <option value="50">50 km</option>
-            <option value="100">100 km</option>
-          </select>
-
-          <select
-            value={filters.gender}
-            onChange={(e) =>
-              setFilters({ ...filters, gender: e.target.value })
-            }
-          >
-            <option value="">Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="non-binary">Non-binary</option>
-          </select>
-
-          <select
-            value={filters.hobbies}
-            onChange={(e) =>
-              setFilters({ ...filters, hobbies: e.target.value })
-            }
-          >
-            <option value="">Hobbies</option>
-            <option value="Photography">Photography</option>
-            <option value="Music">Music</option>
-            <option value="Travel">Travel</option>
-            <option value="Sports">Sports</option>
-            <option value="Reading">Reading</option>
-            <option value="Gaming">Gaming</option>
-          </select>
-
-          <button className="filter-btn" onClick={handleApplyFilters}>
-            Apply
-          </button>
-        </div>
+        <button
+          className="filter-toggle-btn"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+         ☰ Filters
+        </button>
       </div>
 
-      {/* Profiles */}
+      {/* ✅ FILTER DROPDOWN */}
+      {showFilters && (
+        <div className="filters-dropdown">
+          {/* Age */}
+          <div className="filter-section">
+            <div onClick={() => toggleSection("age")} className="filter-title">
+              Age
+            </div>
+
+            {openSection === "age" && (
+              <div className="filter-options">
+                {["18-25", "26-35", "36-45", "46+"].map((age) => (
+                  <label key={age}>
+                    <input
+                      type="checkbox"
+                      checked={(filters.age || []).includes(age)}
+                      onChange={() => handleCheckbox("age", age)}
+                    />
+                    {age}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* City */}
+          <div className="filter-section">
+            <div onClick={() => toggleSection("city")} className="filter-title">
+              City
+            </div>
+
+            {openSection === "city" && (
+              <div className="filter-options">
+                {["Mumbai", "Delhi", "Bangalore", "Hyderabad"].map((city) => (
+                  <label key={city}>
+                    <input
+                      type="checkbox"
+                      checked={(filters.city || []).includes(city)}
+                      onChange={() => handleCheckbox("city", city)}
+                    />
+                    {city}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Distance */}
+          <div className="filter-section">
+            <div
+              onClick={() => toggleSection("distance")}
+              className="filter-title"
+            >
+              Distance
+            </div>
+
+            {openSection === "distance" && (
+              <div className="filter-options">
+                {["5 km", "10 km", "25 km", "50 km"].map((distance) => (
+                  <label key={distance}>
+                    <input
+                      type="checkbox"
+                      checked={(filters.distance || []).includes(distance)}
+                      onChange={() =>
+                        handleCheckbox("distance", distance)
+                      }
+                    />
+                    {distance}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Gender */}
+          <div className="filter-section">
+            <div
+              onClick={() => toggleSection("gender")}
+              className="filter-title"
+            >
+              Gender
+            </div>
+
+            {openSection === "gender" && (
+              <div className="filter-options">
+                {["Male", "Female", "Non-binary"].map((gender) => (
+                  <label key={gender}>
+                    <input
+                      type="checkbox"
+                      checked={(filters.gender || []).includes(gender)}
+                      onChange={() => handleCheckbox("gender", gender)}
+                    />
+                    {gender}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Hobbies */}
+          <div className="filter-section">
+            <div
+              onClick={() => toggleSection("hobbies")}
+              className="filter-title"
+            >
+              Hobbies
+            </div>
+
+            {openSection === "hobbies" && (
+              <div className="filter-options">
+                {["Music", "Travel", "Gaming", "Sports"].map((hobby) => (
+                  <label key={hobby}>
+                    <input
+                      type="checkbox"
+                      checked={(filters.hobbies || []).includes(hobby)}
+                      onChange={() => handleCheckbox("hobbies", hobby)}
+                    />
+                    {hobby}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Profiles */}
       <div className="profiles-scroll">
         <div className="profiles-grid">
-          {users && users.length > 0 ? (
+          {users?.length ? (
             users.map((user) => {
               const age = calculateAge(user.date_of_birth);
 
@@ -117,38 +184,28 @@ function FollowList({
                 >
                   <div className="card-image">
                     <img
-                      src={
-                        user.photo_1 ||
-                        "https://i.pravatar.cc/300?img=1"
-                      }
+                      src={user.photo_1 || "https://i.pravatar.cc/300"}
                       alt={user.first_name}
                     />
                   </div>
 
                   <div className="avatar">
                     <img
-                      src={
-                        user.photo_2 ||
-                        "https://i.pravatar.cc/300?img=1"
-                      }
+                      src={user.photo_2 || "https://i.pravatar.cc/100"}
                       alt={user.first_name}
                     />
                   </div>
 
                   <div className="card-info">
                     <button
-                      className={`follow-btn ${
-                        following.has(user.id) ? "following" : ""
-                      }`}
+                      className={`follow-btn ${following.has(user.id) ? "following" : ""
+                        }`}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleFollow(user.id);
                       }}
-                      aria-pressed={following.has(user.id)}
                     >
-                      {following.has(user.id)
-                        ? "Following"
-                        : "Follow"}
+                      {following.has(user.id) ? "Following" : "Follow"}
                     </button>
 
                     <h3>
@@ -159,20 +216,12 @@ function FollowList({
               );
             })
           ) : (
-            <p
-              style={{
-                color: "#666",
-                textAlign: "center",
-                padding: "20px",
-              }}
-            >
-              No users found
-            </p>
+            <p className="no-users">No users found</p>
           )}
         </div>
       </div>
 
-      {/* Chat */}
+      {/* ✅ Chat */}
       {selectedProfile && (
         <ChatBox
           profile={selectedProfile}
