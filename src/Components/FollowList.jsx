@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import ChatBox from "./ChatBox";
 import "./FollowList.css";
 import Header from "./header";
+import ProfileCard from "./ProfileCard";
 
 function FollowList({
   users,
@@ -44,56 +45,20 @@ function FollowList({
       />
 
       {/* ✅ Profiles */}
-      <div className="profiles-scroll">
-        <div className="profiles-grid">
-          {users?.length ? (
-            users.map((user) => {
-              const age = calculateAge(user.date_of_birth);
+      {users.map((user) => {
+        const age = calculateAge(user.date_of_birth);
 
-              return (
-                <div
-                  className="profile-card"
-                  key={user.id}
-                  onClick={() => setSelectedProfile(user)}
-                >
-                  <div className="card-image">
-                    <img
-                      src={user.photo_1 || "https://i.pravatar.cc/300"}
-                      alt={user.first_name}
-                    />
-                  </div>
-
-                  <div className="avatar">
-                    <img
-                      src={user.photo_2 || "https://i.pravatar.cc/100"}
-                      alt={user.first_name}
-                    />
-                  </div>
-
-                  <div className="card-info">
-                    <button
-                      className={`follow-btn ${following.has(user.id) ? "following" : ""
-                        }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFollow(user.id);
-                      }}
-                    >
-                      {following.has(user.id) ? "Following" : "Follow"}
-                    </button>
-
-                    <h3>
-                      {user.first_name}, {age || "N/A"}
-                    </h3>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <p className="no-users">No users found</p>
-          )}
-        </div>
-      </div>
+        return (
+          <ProfileCard
+            key={user.id}
+            user={user}
+            age={age}
+            following={following}
+            toggleFollow={toggleFollow}
+            setSelectedProfile={setSelectedProfile}
+          />
+        );
+      })}
 
       {/* ✅ Chat */}
       {selectedProfile && (
