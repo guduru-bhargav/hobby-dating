@@ -5,6 +5,13 @@ function BottomNav({ activeView, onNavigate, unreadCount }) {
   return (
     <div className="bottom-nav">
       <button
+        className={activeView === "follow" ? "active" : ""}
+        onClick={() => onNavigate("follow")}
+      >
+        👥
+        <span>Follow</span>
+      </button>
+      <button
         className={activeView === "chat" ? "active" : ""}
         onClick={() => onNavigate("chat")}
       >
@@ -13,13 +20,6 @@ function BottomNav({ activeView, onNavigate, unreadCount }) {
         {unreadCount > 0 && <div className="badge">{unreadCount}</div>}
       </button>
 
-      <button
-        className={activeView === "follow" ? "active" : ""}
-        onClick={() => onNavigate("follow")}
-      >
-        👥
-        <span>Follow</span>
-      </button>
         <button
         className={activeView === "settings" ? "active" : ""}
         onClick={() => onNavigate("settings")}
