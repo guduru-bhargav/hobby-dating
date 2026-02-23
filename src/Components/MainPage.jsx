@@ -133,7 +133,10 @@ function MainPage() {
         return <SettingsMain />;
 
       case "chat":
-        return <ChatList currentUser={currentUser} />;
+        return <ChatList
+      currentUser={currentUser}
+      setSelectedProfile={setSelectedProfile}
+    />
 
       case "follow":
       default:

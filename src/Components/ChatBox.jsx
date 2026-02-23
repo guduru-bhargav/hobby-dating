@@ -18,7 +18,7 @@ function ChatBox({ profile, onClose, currentUser }) {
     scrollToBottom();
   }, [messages]);
 
-  // ✅ Get logged-in user directly from Supabase
+  // ✅ Get authenticated Supabase user
   useEffect(() => {
     const getUser = async () => {
       const { data, error } = await supabase.auth.getUser();
@@ -28,7 +28,6 @@ function ChatBox({ profile, onClose, currentUser }) {
         return;
       }
 
-      console.log("✅ Auth user:", data.user.id);
       setAuthUser(data.user);
     };
 
@@ -37,18 +36,13 @@ function ChatBox({ profile, onClose, currentUser }) {
 
   // 1️⃣ Fetch / Create Conversation
   useEffect(() => {
-    if (!authUser?.id || !profile?.id) return;
+    if (!authUser?.id || !profile?.user_id) return;
 
     const initChat = async () => {
-      console.log("🚀 InitChat running");
-
       const userA = authUser.id;
       const userB = profile.user_id;
 
-      console.log("UserA:", userA);
-      console.log("UserB:", userB);
-
-      // 🔍 Check if conversation already exists
+      // 🔍 Check existing conversation
       const { data: existing, error } = await supabase
         .from("conversations")
         .select("*")
@@ -58,18 +52,16 @@ function ChatBox({ profile, onClose, currentUser }) {
         .maybeSingle();
 
       if (error) {
-        console.error("❌ Fetch conversation error:", error);
+        console.error("❌ Conversation fetch error:", error);
         return;
       }
 
       if (existing) {
-        console.log("✅ Found existing conversation");
         setConversation(existing);
         return;
       }
 
-      console.log("✨ Creating new conversation");
-
+      // ✨ Create new conversation
       const { data: newConv, error: insertError } = await supabase
         .from("conversations")
         .insert({
@@ -82,13 +74,12 @@ function ChatBox({ profile, onClose, currentUser }) {
       if (insertError) {
         console.error("❌ Conversation insert failed:", insertError);
       } else {
-        console.log("✅ Conversation created:", newConv);
         setConversation(newConv);
       }
     };
 
     initChat();
-  }, [authUser?.id, profile?.id]);
+  }, [authUser?.id, profile?.user_id]);
 
   // 2️⃣ Fetch Messages + Realtime
   useEffect(() => {
@@ -97,8 +88,6 @@ function ChatBox({ profile, onClose, currentUser }) {
     let channel;
 
     const fetchMessages = async () => {
-      console.log("📥 Fetching messages");
-
       const { data, error } = await supabase
         .from("messages")
         .select("*")
@@ -125,8 +114,6 @@ function ChatBox({ profile, onClose, currentUser }) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          console.log("⚡ Realtime message:", payload.new);
-
           setMessages((prev) => {
             if (prev.some((m) => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
@@ -146,12 +133,13 @@ function ChatBox({ profile, onClose, currentUser }) {
     if (!conversation?.id || !authUser?.id || sending) return;
 
     const tempId = Date.now();
+    const messageText = newMessage;
 
     const optimisticMessage = {
       id: tempId,
       conversation_id: conversation.id,
       sender_id: authUser.id,
-      message: newMessage,
+      message: messageText,
       status: "sending",
     };
 
@@ -164,7 +152,7 @@ function ChatBox({ profile, onClose, currentUser }) {
       .insert({
         conversation_id: conversation.id,
         sender_id: authUser.id,
-        message: optimisticMessage.message,
+        message: messageText,
       })
       .select()
       .single();
@@ -177,13 +165,26 @@ function ChatBox({ profile, onClose, currentUser }) {
           msg.id === tempId ? { ...msg, status: "failed" } : msg
         )
       );
-    } else {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempId ? { ...data, status: "sent" } : msg
-        )
-      );
+
+      setSending(false);
+      return;
     }
+
+    // ✅ Replace optimistic message
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === tempId ? { ...data, status: "sent" } : msg
+      )
+    );
+
+    // ✅ Update conversation preview
+    await supabase
+  .from("conversations")
+  .update({
+    last_message: newMessage,
+    last_message_at: new Date().toISOString(),
+  })
+  .eq("id", conversation.id);
 
     setSending(false);
   };
@@ -194,6 +195,8 @@ function ChatBox({ profile, onClose, currentUser }) {
       sendMessage();
     }
   };
+
+  // 4️⃣ Mark Notifications Read
   useEffect(() => {
     if (!conversation?.id || !currentUser?.id) return;
 
@@ -211,18 +214,24 @@ function ChatBox({ profile, onClose, currentUser }) {
   return (
     <div className="chat-overlay" onClick={onClose}>
       <div className="chat-box" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
         <div className="chat-header">
-          <img src={profile.photo_2} alt={profile.photo_1} />
+          <img
+            src={profile.photo_2 || "https://i.pravatar.cc/150?img=5"}
+            alt={profile.first_name}
+          />
           <h4>{profile.first_name}</h4>
           <button onClick={onClose}>✕</button>
         </div>
 
+        {/* Messages */}
         <div className="chat-messages">
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`message-wrapper ${msg.sender_id === authUser?.id ? "sent" : "received"
-                }`}
+              className={`message-wrapper ${
+                msg.sender_id === authUser?.id ? "sent" : "received"
+              }`}
             >
               <p className={`message ${msg.status || ""}`}>
                 {msg.message}
@@ -240,6 +249,7 @@ function ChatBox({ profile, onClose, currentUser }) {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input */}
         <div className="chat-input">
           <input
             placeholder="Type a message..."
