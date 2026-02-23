@@ -1,7 +1,7 @@
 import React from "react";
 
 
-function Header({
+function HeaderMain({
   showFilters,
   setShowFilters,
   openSection,
@@ -167,4 +167,4 @@ function Header({
   );
 }
 
-export default Header;
+export default HeaderMain;

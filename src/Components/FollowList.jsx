@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import ChatBox from "./ChatBox";
 import "./FollowList.css";
-import Header from "./header";
 import ProfileCard from "./ProfileCard";
+import HeaderMain from "./HeaderMain"; // ✅ FIX ADDED
 
 function FollowList({
   users,
@@ -33,9 +33,7 @@ function FollowList({
 
   return (
     <>
-      {/* ✅ HEADER */}
-      {/* ✅ FILTER DROPDOWN */}
-      <Header
+      <HeaderMain
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         openSection={openSection}
@@ -44,7 +42,6 @@ function FollowList({
         handleCheckbox={handleCheckbox}
       />
 
-      {/* ✅ Profiles */}
       {users.map((user) => {
         const age = calculateAge(user.date_of_birth);
 
@@ -60,7 +57,6 @@ function FollowList({
         );
       })}
 
-      {/* ✅ Chat */}
       {selectedProfile && (
         <ChatBox
           profile={selectedProfile}
