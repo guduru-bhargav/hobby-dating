@@ -10,8 +10,14 @@ function ProfileCard({
 }) {
   const [showSecondPhoto, setShowSecondPhoto] = useState(false);
 
-  const handleImageTap = () => {
+  const handleImageTap = (e) => {
+    e.stopPropagation(); // prevent card click
     setShowSecondPhoto(!showSecondPhoto);
+  };
+
+  const handleChatClick = (e) => {
+    e.stopPropagation(); // 🔥 prevent full card click
+    setSelectedProfile(user); // open ChatBox
   };
 
   return (
@@ -46,9 +52,16 @@ function ProfileCard({
 
       {/* ✅ Bottom Info */}
       <div className="profile-info-overlay">
-        <h3>
-          {user.first_name}, {age || "N/A"}
-        </h3>
+        <div className="name-age-row">
+          <h3>
+            {user.first_name}, {age || "N/A"}
+          </h3>
+
+          {/* 🔥 Chat Chip */}
+          <span className="chat-chip" onClick={handleChatClick}>
+            Chat
+          </span>
+        </div>
       </div>
     </div>
   );

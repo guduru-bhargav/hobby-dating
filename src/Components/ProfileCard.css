@@ -60,3 +60,25 @@
   font-size: 22px;
   font-weight: 600;
 }
+
+.name-age-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-chip {
+  background: #ffffff;
+  color: #ff4d6d;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.chat-chip:hover {
+  background: #ff4d6d;
+  color: #ffffff;
+}
