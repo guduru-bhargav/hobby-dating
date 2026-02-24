@@ -81,7 +81,7 @@ function ChatList({ currentUser, setSelectedProfile }) {
           <div className="chat-info">
             <h4>{chat.profile?.first_name || "Unknown"}</h4>
             <p>
-              {chat.last_message_text || "Let's start chatting 💬"}
+              {chat.last_message_text || "Start chatting 💬"}
             </p>
           </div>
         </div>
