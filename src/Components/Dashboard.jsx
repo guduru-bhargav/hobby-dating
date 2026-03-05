@@ -141,7 +141,7 @@ export default function Dashboard() {
             {/* New Added Profiles */}
             <section className="new-profiles container">
                 <h2>New added profiles</h2>
-                <p>You are few steps away from meeting your special someone.</p>
+                <p>You are few steps away from meeting your special's someone.</p>
                 <div className="new-profile-list">
                     {profiles.map(({ name, age, img, desc }, i) => (
                         <div key={i} className="new-profile-card">
