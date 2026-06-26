@@ -6,7 +6,7 @@
   width: 100vw;
   height: 100vh;
   /* background-image: url('../assets/hobbyjpeg.jpeg'); */
-    background-image: url("/src/assets/dashHBA.jpeg");
+    /* background-image: url("/src/assets/dashHBA.jpeg"); */
     /* background: linear-gradient(135deg, #FCE4EC, #E3F2FD); */
     /* background: linear-gradient(135deg, #E0F7FA, #E3F2FD); */
     /* background: linear-gradient(135deg, #4C1D95, #7C3AED);
@@ -17,6 +17,7 @@
   /* background-size: cover;
   background-position: center;
   position: relative; */
+  background: linear-gradient(135deg, #FFDEE9, #B5FFFC);
   overflow: hidden; 
 }
 
