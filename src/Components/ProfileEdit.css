@@ -1,0 +1,61 @@
+/* ==========================================================================
+   Profile editor (edit and first-time setup)
+   ========================================================================== */
+.profile-edit {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-edit .view-head {
+  margin-bottom: 0;
+}
+
+.pe-sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.pe-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.pe-card h3 {
+  font-size: 1.05rem;
+}
+
+.pe-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.pe-grid h3 {
+  grid-column: 1 / -1;
+}
+
+.pe-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0;
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+}
+
+.pe-actions .btn {
+  min-width: 140px;
+}
+
+@media (max-width: 600px) {
+  .pe-grid {
+    grid-template-columns: 1fr;
+  }
+}

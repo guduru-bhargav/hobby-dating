@@ -1,109 +1,58 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Icon from "./Icon";
+import {
+  fetchMessages,
+  getOrCreateConversation,
+  markNotificationsRead,
+  sendMessage,
+} from "../api/chat";
 import { supabase } from "../lib/supabase";
+import { clockTime, errorMessage, photoOf } from "../lib/utils";
 import "./ChatBox.css";
 
-function ChatBox({ profile, onClose, currentUser }) {
-  const [authUser, setAuthUser] = useState(null);
+// One-to-one chat with `profile` (the other person). `meId` is the viewer's auth id.
+function ChatBox({ meId, profile, onBack }) {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const listRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Open (or create) the conversation for this pair and load its history
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    setConversation(null);
+    setMessages([]);
 
-  // ✅ Get authenticated Supabase user
-  useEffect(() => {
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data?.user) {
-        console.warn("⚠ No authenticated user");
-        return;
+    (async () => {
+      try {
+        const conv = await getOrCreateConversation(meId, profile.user_id);
+        if (cancelled) return;
+        const history = await fetchMessages(conv.id);
+        if (cancelled) return;
+        setConversation(conv);
+        setMessages(history);
+        markNotificationsRead(meId, conv.id);
+      } catch (err) {
+        if (!cancelled) setError(errorMessage(err, "Couldn't open this chat."));
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    })();
 
-      setAuthUser(data.user);
+    return () => {
+      cancelled = true;
     };
+  }, [meId, profile.user_id]);
 
-    getUser();
-  }, []);
-
-  // 1️⃣ Fetch / Create Conversation
-  useEffect(() => {
-    if (!authUser?.id || !profile?.user_id) return;
-
-    const initChat = async () => {
-      const userA = authUser.id;
-      const userB = profile.user_id;
-
-      // 🔍 Check existing conversation
-      const { data: existing, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .or(
-          `and(user1.eq.${userA},user2.eq.${userB}),and(user1.eq.${userB},user2.eq.${userA})`
-        )
-        .maybeSingle();
-
-      if (error) {
-        console.error("❌ Conversation fetch error:", error);
-        return;
-      }
-
-      if (existing) {
-        setConversation(existing);
-        return;
-      }
-
-      // ✨ Create new conversation
-      const { data: newConv, error: insertError } = await supabase
-        .from("conversations")
-        .insert({
-          user1: userA,
-          user2: userB,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error("❌ Conversation insert failed:", insertError);
-      } else {
-        setConversation(newConv);
-      }
-    };
-
-    initChat();
-  }, [authUser?.id, profile?.user_id]);
-
-  // 2️⃣ Fetch Messages + Realtime
+  // Live incoming messages for this conversation
   useEffect(() => {
     if (!conversation?.id) return;
 
-    let channel;
-
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversation.id)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("❌ Messages fetch error:", error);
-      } else {
-        setMessages(data || []);
-      }
-    };
-
-    fetchMessages();
-
-    channel = supabase
+    const channel = supabase
       .channel(`chat_${conversation.id}`)
       .on(
         "postgres_changes",
@@ -114,156 +63,142 @@ function ChatBox({ profile, onClose, currentUser }) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
-          });
+          const incoming = payload.new;
+          setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
+          if (incoming.sender_id !== meId) markNotificationsRead(meId, conversation.id);
         }
       )
       .subscribe();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
-  }, [conversation?.id]);
+  }, [conversation?.id, meId]);
 
-  // 3️⃣ Send Message
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-    if (!conversation?.id || !authUser?.id || sending) return;
-
-    const tempId = Date.now();
-    const messageText = newMessage;
-
-    const optimisticMessage = {
-      id: tempId,
-      conversation_id: conversation.id,
-      sender_id: authUser.id,
-      message: messageText,
-      status: "sending",
-    };
-
-    setMessages((prev) => [...prev, optimisticMessage]);
-    setNewMessage("");
-    setSending(true);
-
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({
-        conversation_id: conversation.id,
-        sender_id: authUser.id,
-        message: messageText,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("❌ Send error:", error);
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempId ? { ...msg, status: "failed" } : msg
-        )
-      );
-
-      setSending(false);
-      return;
-    }
-
-    // ✅ Replace optimistic message
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === tempId ? { ...data, status: "sent" } : msg
-      )
-    );
-
-    // ✅ Update conversation preview
-    await supabase
-  .from("conversations")
-  .update({
-    last_message: newMessage,
-    last_message_at: new Date().toISOString(),
-  })
-  .eq("id", conversation.id);
-
-    setSending(false);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  // 4️⃣ Mark Notifications Read
+  // Keep the latest message in view
   useEffect(() => {
-    if (!conversation?.id || !currentUser?.id) return;
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages.length]);
 
-    markAsRead();
-  }, [conversation?.id]);
+  const dispatch = useCallback(
+    async (text, tempId) => {
+      try {
+        const saved = await sendMessage(conversation.id, meId, text);
+        setMessages((prev) => {
+          // Realtime may already have delivered the saved row; never show it twice
+          const withoutTemp = prev.filter((m) => m.id !== tempId);
+          return withoutTemp.some((m) => m.id === saved.id) ? withoutTemp : [...withoutTemp, saved];
+        });
+      } catch {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
+        );
+      }
+    },
+    [conversation?.id, meId]
+  );
 
-  const markAsRead = async () => {
-    await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("conversation_id", conversation.id)
-      .eq("user_id", currentUser.id);
+  const handleSend = (e) => {
+    e?.preventDefault();
+    const text = draft.trim();
+    if (!text || !conversation) return;
+
+    const tempId = `tmp-${Date.now()}`;
+    setDraft("");
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        conversation_id: conversation.id,
+        sender_id: meId,
+        message: text,
+        created_at: new Date().toISOString(),
+        status: "sending",
+      },
+    ]);
+    dispatch(text, tempId);
   };
+
+  const retry = (msg) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msg.id ? { ...m, status: "sending" } : m))
+    );
+    dispatch(msg.message, msg.id);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const name = profile.first_name || "Member";
 
   return (
-    <div className="chat-overlay" onClick={onClose}>
-      <div className="chat-box" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="chat-header">
-          <img
-            src={profile.photo_2 || "https://i.pravatar.cc/150?img=5"}
-            alt={profile.first_name}
-          />
-          <h4>{profile.first_name}</h4>
-          <button onClick={onClose}>✕</button>
-        </div>
-
-        {/* Messages */}
-        <div className="chat-messages">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`message-wrapper ${
-                msg.sender_id === authUser?.id ? "sent" : "received"
-              }`}
-            >
-              <p className={`message ${msg.status || ""}`}>
-                {msg.message}
-              </p>
-
-              {msg.status === "sending" && (
-                <span className="message-status">Sending...</span>
-              )}
-
-              {msg.status === "failed" && (
-                <span className="message-status failed">Failed</span>
-              )}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div className="chat-input">
-          <input
-            placeholder="Type a message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={sending}
-          />
-          <button onClick={sendMessage} disabled={sending}>
-            {sending ? "..." : "Send"}
+    <section className="chat-panel" aria-label={`Chat with ${name}`}>
+      <header className="chat-head">
+        {onBack && (
+          <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back to messages">
+            <Icon name="back" size={20} />
           </button>
+        )}
+        <img className="chat-avatar" src={photoOf(profile, 1)} alt="" />
+        <div className="chat-head-text">
+          <h3>{name}</h3>
+          {profile.location_city && <p>{profile.location_city}</p>}
         </div>
+      </header>
+
+      <div className="chat-messages" ref={listRef}>
+        {loading && <div className="chat-state"><div className="spinner" /></div>}
+        {error && <div className="form-error chat-state" role="alert">{error}</div>}
+
+        {!loading && !error && messages.length === 0 && (
+          <div className="chat-state chat-intro">
+            <img className="chat-avatar lg" src={photoOf(profile, 1)} alt="" />
+            <p>You matched on shared interests. Say hi to {name}.</p>
+          </div>
+        )}
+
+        {messages.map((msg) => {
+          const mine = msg.sender_id === meId;
+          return (
+            <div key={msg.id} className={`bubble-row ${mine ? "mine" : "theirs"}`}>
+              <div className={`bubble ${msg.status === "failed" ? "failed" : ""}`}>
+                <p>{msg.message}</p>
+                <span className="bubble-meta">
+                  {msg.status === "sending" && "Sending…"}
+                  {msg.status === "failed" && (
+                    <button type="button" className="retry" onClick={() => retry(msg)}>
+                      Not sent · Retry
+                    </button>
+                  )}
+                  {!msg.status && clockTime(msg.created_at)}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+
+      <form className="chat-compose" onSubmit={handleSend}>
+        <textarea
+          className="input"
+          rows={1}
+          placeholder={conversation ? "Write a message…" : "Opening chat…"}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onKeyDown}
+          disabled={!conversation}
+          aria-label="Message"
+        />
+        <button type="submit" className="btn btn-primary send-btn"
+          disabled={!conversation || !draft.trim()} aria-label="Send message">
+          <Icon name="send" size={18} />
+        </button>
+      </form>
+    </section>
   );
 }
 

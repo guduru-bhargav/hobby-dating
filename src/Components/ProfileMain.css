@@ -1,86 +1,129 @@
-.profile-main {
-  max-width: 600px;
-  margin: 40px auto;
-  background: #fff;
-  border-radius: 16px;
+/* ==========================================================================
+   My profile (view mode)
+   ========================================================================== */
+.profile-page {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pp-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-  font-family: "Segoe UI", sans-serif;
 }
 
-.cover-photo img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
+.pp-cover {
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.1);
+  position: relative;
 }
 
-.avatar-container-Styles {
+.pp-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.35));
+}
+
+.pp-identity {
   display: flex;
-  justify-content: center;
-  margin-top: -60px; /* overlap the cover photo */
+  align-items: flex-end;
+  gap: 16px;
+  padding: 0 24px;
+  margin-top: -44px;
+  position: relative;
+  z-index: 1;
 }
 
-.avatar-Styles {
-  width: 120px;
-  height: 120px;
+.pp-avatar {
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  border: 4px solid #fff;
   object-fit: cover;
+  border: 4px solid var(--surface);
+  box-shadow: var(--shadow);
 }
 
-.basic-info {
-  text-align: center;
-  padding: 16px;
+.pp-identity h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  padding-bottom: 6px;
 }
 
-.basic-info h2 {
-  margin: 8px 0 4px 0;
-  font-size: 24px;
+.pp-meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-top: 2px;
+  text-transform: capitalize;
 }
 
-.basic-info p {
-  margin: 0;
-  color: #555;
+.pp-body {
+  padding: 20px 24px 24px;
+  display: grid;
+  gap: 20px;
 }
 
-.hobbies-section, .dating-intent {
-  padding: 16px;
-  border-top: 1px solid #eee;
+.pp-block h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
 }
 
-.hobbies-section h3, .dating-intent h3 {
-  margin-bottom: 8px;
+.pill-soft {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
-.hobbies-section ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.pp-muted {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.pp-complete {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.pp-complete-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: space-between;
+  font-size: 0.95rem;
 }
 
-.hobbies-section li {
-  background: #f0f0f0;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 14px;
+.pp-complete-row span {
+  font-weight: 700;
+  color: var(--brand);
 }
 
-.edit-button-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+.meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
 }
 
-.btn-edit {
-  padding: 12px 24px;
-  border-radius: 30px;
-  border: none;
-  background: linear-gradient(135deg, #ff5a5f, #ff9966);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 16px;
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-gradient);
+  transition: width 0.4s ease;
 }

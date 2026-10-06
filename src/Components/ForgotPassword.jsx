@@ -1,52 +1,59 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { errorMessage } from "../lib/utils";
+import AuthLayout from "./AuthLayout";
+import Icon from "./Icon";
+import "./Auth.css";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
 
   const handleReset = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setError("");
+    setBusy(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:5173/reset-password", // your route
+    // Use the current origin so the link works on localhost and on the deployed site
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
-    if (error) {
-      console.error("Reset error:", error.message);
-      setMessage(error.message);
-    } else {
-      setMessage("✅ Password reset email sent! Check your inbox.");
-    }
+    setBusy(false);
+    if (resetError) setError(errorMessage(resetError));
+    else setSent(true);
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container">
-        <h2>Forgot Password</h2>
-
-        <form onSubmit={handleReset}>
-          <label>Email</label>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <button type="submit">Send Reset Link</button>
+    <AuthLayout
+      title="Forgot your password?"
+      subtitle="Enter your email and we'll send you a link to set a new one."
+      footer={<Link to="/login">Back to login</Link>}
+    >
+      {sent ? (
+        <div className="form-success" role="status">
+          If an account exists for <strong>{email}</strong>, a reset link is on its way. Check your inbox and spam folder.
+        </div>
+      ) : (
+        <form className="auth-form" onSubmit={handleReset}>
+          <div className="field">
+            <label htmlFor="fp-email">Email</label>
+            <div className="input-wrap">
+              <Icon name="mail" size={18} />
+              <input id="fp-email" className="input" type="email" autoComplete="email"
+                value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+          </div>
+          {error && <div className="form-error" role="alert">{error}</div>}
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+            {busy ? "Sending…" : "Send reset link"}
+          </button>
         </form>
-
-        {message && <p style={{ marginTop: 10 }}>{message}</p>}
-
-        <p style={{ marginTop: 10 }}>
-          Back to <Link to="/login">Login</Link>
-        </p>
-      </div>
-    </div>
+      )}
+    </AuthLayout>
   );
 }
 

@@ -1,118 +1,108 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { errorMessage } from "../lib/utils";
+import AuthLayout from "./AuthLayout";
+import Icon from "./Icon";
 import "./Auth.css";
+
+// Turn Supabase's terse auth errors into something a person can act on
+const friendlyAuthError = (err) => {
+  const msg = err?.message || "";
+  if (/invalid login credentials/i.test(msg)) return "Email or password is incorrect.";
+  if (/email not confirmed/i.test(msg)) return "Please verify your email before logging in.";
+  return errorMessage(err, "Login failed. Please try again.");
+};
 
 function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setErrorMsg("");
 
-    try {
-      // 1️⃣ Log in user
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
-      // ✅ Correct logging
-      console.log("LOGIN DATA:", authData);
-      console.log("LOGIN ERROR:", authError);
+    setLoading(false);
 
-      if (authError) throw authError;
-
-      if (!authData?.user) {
-        throw new Error("Login failed. User not found.");
-      }
-
-      // 2️⃣ Fetch profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", authData.user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      console.log("Logged in profile:", profile);
-
-      // Optional: handle missing profile
-      if (!profile) {
-        console.warn("Profile not found for user");
-        // You could auto-create profile here if needed
-      }
-
-      // 3️⃣ Navigate
-      navigate("/MainPage");
-
-    } catch (err) {
-      console.error("Login error:", err);
-      setErrorMsg(err.message || "Login failed");
-    } finally {
-      setLoading(false);
+    if (authError) {
+      setError(friendlyAuthError(authError));
+      return;
     }
+
+    navigate("/MainPage", { replace: true });
   };
 
   return (
-    <div className="auth-wrapper">
-      <Link to="/dashboard" className="auth-logo-link">
-        <div className="auth-logo">
-          <span className="logo-icon">Hobby Base💕</span>
-        </div>
-      </Link>
-
-      <div className="auth-container">
-        <h2>Login</h2>
-
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Email</label>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Log in to see your matches and messages."
+      footer={
+        <>
+          New here? <Link to="/signup">Create an account</Link>
+        </>
+      }
+    >
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <div className="field">
+          <label htmlFor="login-email">Email</label>
+          <div className="input-wrap">
+            <Icon name="mail" size={18} />
             <input
+              id="login-email"
+              className="input"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
+        </div>
 
-          <div>
-            <label>Password</label>
+        <div className="field">
+          <label htmlFor="login-password">Password</label>
+          <div className="input-wrap">
+            <Icon name="lock" size={18} />
             <input
-              type="password"
+              id="login-password"
+              className="input"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <button
+              type="button"
+              className="toggle-visibility"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              <Icon name={showPassword ? "eyeOff" : "eye"} size={18} />
+            </button>
           </div>
+          <Link to="/forgot-password" className="auth-inline-link">
+            Forgot password?
+          </Link>
+        </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
-          </button>
+        {error && <div className="form-error" role="alert">{error}</div>}
 
-          {errorMsg && (
-            <p style={{ color: "red", marginTop: "8px" }}>
-              {errorMsg}
-            </p>
-          )}
-        </form>
-
-        <p style={{ marginTop: "12px" }}>
-          Don’t have an account? <Link to="/signup">Sign Up</Link>
-        </p>
-        <p>
-  <Link to="/forgot-password">Forgot Password?</Link>
-</p>
-
-      </div>
-    </div>
+        <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          {loading ? "Logging in…" : "Log in"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }
 

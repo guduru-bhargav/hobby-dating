@@ -12,8 +12,6 @@ import Contact from "./Components/Contact";
 import MainPage from "./Components/MainPage";
 
 import ProtectedRoute from "./Components/ProtectedRoute";
-import ProfileMain from "./Components/ProfileMain";
-import SettingsMain from "./Components/SettingsMain";
 import ForgotPassword from "./Components/ForgotPassword";
 import ResetPassword from "./Components/ResetPassword";
 
@@ -33,19 +31,14 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-
-
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Public Dashboard (landing page) */}
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
+        {/* Landing page (logged-in users are sent to /MainPage) */}
+        <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* Protected routes - only accessible after login */}
+        {/* Protected app: profile and settings now live inside MainPage */}
         <Route
           path="/MainPage"
           element={
@@ -54,22 +47,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/ProfileMain"
-          element={
-            <ProtectedRoute>
-              <ProfileMain />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/SettingsMain"
-          element={
-            <ProtectedRoute>
-              <SettingsMain />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/ProfileMain" element={<Navigate to="/MainPage" replace />} />
+        <Route path="/SettingsMain" element={<Navigate to="/MainPage" replace />} />
 
         {/* 404 */}
         <Route path="*" element={<h1>404 Not Found</h1>} />

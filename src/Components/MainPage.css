@@ -1,456 +1,186 @@
-
-.main-container {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-/* Filters */
-.filters {
-  padding: 16px;
-  border-radius: 12px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  
-}
-
-.filters select {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-.filter-btn {
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: none;
-  background: #ff5a5f;
-  color: #fff;
-  cursor: pointer;
-}
-
-/* Profile icon container */
-.profile-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  overflow: hidden;
-  cursor: pointer;
-  flex-shrink: 0;
-  border: 2px solid #2575fc;
-}
-
-.profile-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-
-/* Profiles grid */
-
-.profiles-grid {
+/* ==========================================================================
+   App shell: sidebar + main column (desktop), bottom nav (phones)
+   ========================================================================== */
+.app-shell {
   display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(2, 1fr);
-  gap: 20px;
-  width: max-content;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
 }
 
-.cta {
-  margin-top: 40px;
-  padding: 20px;
-  background: #0f172a;
-  color: #fff;
-  border-radius: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-gradient {
-  background: linear-gradient(135deg, #ff5a5f, #ff9966);
-  border: none;
-  padding: 12px 26px;
-  border-radius: 30px;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.profiles-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 10px;
-}
-
-.profiles-grid {
-  display: grid;
-  grid-auto-flow: column;
-  /* horizontal flow */
-  grid-template-rows: repeat(2, 1fr);
-  /* ONLY 2 rows */
-  gap: 20px;
-
-  width: max-content;
-  /* allows horizontal expansion */
-}
-
-/* Card container */
-
-
-/* Top image collage */
-.card-image {
-  height: 170px;
-  width: 100%;
-}
-
-.card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar {
-  position: absolute;
-  top: calc(60% - 30px);
-  left: 50%;
-  transform: translateX(-50%);
-
-  padding: 14px;
-  border-radius: 50%;
-  z-index: 2;
-}
-
-.avatar img {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.card-info {
-  height: 90%;
-  padding-top: 36px;
-  /* give space for follow button above the name */
-  text-align: center;
-  position: relative;
-}
-
-.card-info h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-/* place follow button inside card-info above the name/age */
-.card-info .follow-btn {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 10px;
-  background: rgba(37, 117, 252, 0.95);
-  color: #fff;
-  border: none;
-  border-radius: 18px;
-  cursor: pointer;
-  font-size: 12px;
-  z-index: 5;
-  display: inline-block;
-}
-
-.follow-btn.following {
-  background: rgba(76, 175, 80, 0.95);
-}
-
-/* ===== MOBILE RESPONSIVE STYLES ===== */
-
-/* Extra small devices (phones: < 480px) */
-@media (max-width: 480px) {
-  .main-container {
-    padding: 12px;
-    
-  }
-
-  /* Filters bar */
-  .filters-bar {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .filters {
-    padding: 12px;
-    gap: 8px;
-    flex-direction: column;
-  }
-
-  .filters select,
-  .filter-btn {
-    width: 100%;
-    padding: 10px;
-    font-size: 13px;
-  }
-
-  .profile-icon {
-    width: 36px;
-    height: 36px;
-    align-self: flex-start;
-    margin-bottom: 10px;
-  }
-
-  /* Profile cards - single column on very small phones */
-  .profiles-grid {
-    grid-auto-flow: row;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    width: 100%;
-    max-content: none;
-  }
-
-
-  .card-image {
-    height: 250px;
-  }
-
-  .avatar {
-    top: calc(250px - 26px);
-  }
-
-  .avatar img {
-    width: 48px;
-    height: 48px;
-  }
-
-  .card-info h3 {
-    font-size: 13px;
-  }
-
-  /* CTA section */
-  .cta {
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-    margin-top: 20px;
-  }
-
-  .cta p {
-    font-size: 12px;
-  }
-
-  .btn-gradient {
-    width: 100%;
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-
-  /* Scroll container */
-  .profiles-scroll {
-    padding-bottom: 8px;
-  }
-}
-
-/* Small devices (tablets: 480px - 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
-  .main-container {
-    padding: 16px 20px;
-  }
-
-  .filters-bar {
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .filters {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .filters select,
-  .filter-btn {
-    padding: 9px 12px;
-    font-size: 13px;
-  }
-
-  .profile-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  /* Grid - 2 columns */
-  .profiles-grid {
-    grid-auto-flow: dense;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    width: 100%;
-    max-content: none;
-  }
-
-  .card-image {
-    height: 220px;
-  }
-
-  .avatar {
-    top: calc(220px - 24px);
-  }
-
-  .avatar img {
-    width: 48px;
-    height: 48px;
-  }
-
-  .cta {
-    flex-wrap: wrap;
-    padding: 16px;
-  }
-
-  .btn-gradient {
-    padding: 10px 18px;
-    font-size: 13px;
-  }
-}
-
-/* Medium devices and up (landscape) */
-@media (min-width: 769px) {
-  .profiles-grid {
-    grid-auto-flow: column;
-    grid-template-rows: repeat(2, 1fr);
-    width: max-content;
-  }
-
-  .profile-card {
-    width: 170px;
-    height: auto;
-  }
-}
-
-/* Landscape orientation adjustments */
-@media (max-height: 500px) {
-  .card-image {
-    height: 150px;
-  }
-
-  .avatar {
-    width: 40px;
-    height: 40px;
-  }
-
-  .avatar img {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-
-
-/* Layout */
-.layout {
-  display: flex;
+.app-sidebar {
+  position: sticky;
+  top: 0;
   height: 100vh;
-/* background: linear-gradient(135deg, #FDEBFF, #E0F7FA); */
-/* background: linear-gradient(135deg, #FFF0F6, #FFE3EC); */
-/* background: linear-gradient(135deg, #FDEBFF, #E0F7FA); */
-/* background: linear-gradient(135deg, #F3E8FF, #E0E7FF); */
-/* background: linear-gradient(135deg, #FFF1E6, #FFE5EC); */
-/* background: linear-gradient(135deg, #E6FFFA, #F0FFF4); */
-/* background: linear-gradient(135deg, #EDE9FE, #DBEAFE); */
-background: linear-gradient(135deg, #FFDEE9, #B5FFFC);
-  /* background-image: url("/src/assets/dashHBA.jpeg"); */
+  background: var(--surface);
+  border-right: 1px solid var(--line);
 }
 
-/* Sidebar – Always Visible */
-.sidebar {
-  width: 40%;
-  min-width: 240px;
-  max-width: 300px;
-  color: white;
+.app-main {
+  min-width: 0;
+  padding: 28px 32px 40px;
+}
+
+.app-shell.is-messages .app-main {
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.setup-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  padding: 32px 16px;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.icon-btn:hover {
+  background: var(--bg);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin-bottom: 4px;
+}
+
+/* Shared page header (Discover, Messages, Profile, Settings) */
+.view-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.view-head h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.view-head.compact {
+  margin: 0;
+  padding: 20px 20px 12px;
+}
+
+.view-head.compact h1 {
+  font-size: 1.3rem;
+}
+
+/* Messages: inbox beside the open chat */
+.messages-layout {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  height: 100vh;
+}
+
+.messages-list {
   display: flex;
   flex-direction: column;
-}
-.main-content {
-  /* flex: 1; */
-  width: 100%;
-  padding: 20px;
+  min-height: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
   overflow-y: auto;
 }
 
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.messages-chat {
+  min-height: 0;
+  height: 100%;
 }
 
-
-.sidebar-header button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-/* Sidebar Menu */
-.sidebar-menu {
-  padding: 16px;
-}
-
-.filters-bar {
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-
-
-.filters select {
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-/* Profiles */
-.profiles-grid {
+.chat-placeholder {
+  height: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--bg);
 }
 
-.profile-card {
-  background: white;
-  border-radius: 14px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.chat-placeholder h3 {
+  color: var(--ink);
+  font-size: 1.1rem;
 }
 
-.profile-card:hover {
-  transform: translateY(-4px);
+/* Phones: bottom nav, single-column content */
+.bottom-nav {
+  display: none;
 }
 
-.profile-card img {
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
 
-  object-fit: cover;
-}
-
-.side-menu {
-  display: block;
-}
-
-.main-content {
-  flex: 1;
-  padding-bottom: 70px;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
+  .app-sidebar {
     display: none;
   }
 
-  .main-content {
-    width: 100%;
+  .app-main {
+    padding: 16px 16px 104px;
+  }
+
+  .app-shell.is-messages .app-main {
+    height: auto;
+    padding-bottom: 80px;
+    overflow: visible;
+  }
+
+  .messages-layout {
+    grid-template-columns: 1fr;
+    height: calc(100vh - 80px);
+  }
+
+  .messages-layout.has-chat .messages-list {
+    display: none;
+  }
+
+  .messages-layout:not(.has-chat) .messages-chat {
+    display: none;
+  }
+
+  .messages-list {
+    border-right: 0;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
   }
 }

@@ -1,104 +1,131 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "./SettingsMain.css";
+import Icon from "./Icon";
+import { supabase } from "../lib/supabase";
+import { errorMessage } from "../lib/utils";
 
-function SettingsMain() {
-  // Hardcoded user data for UI demonstration
-  const [userData, setUserData] = useState({
-    email: "john.doe@example.com",
-    first_name: "John",
-  });
+const SUPPORT_EMAIL = "info@hda.com"; // same address shown in the site footer
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+function SettingsMain({ me, onLogout }) {
+  const [form, setForm] = useState({ current: "", next: "", confirm: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData({ ...passwordData, [name]: value });
-  };
+  const update = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
-  const handleResetPassword = (e) => {
+  // Re-check the current password before changing it, so a left-open session can't change it silently
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
-    // For now just log the data
-    console.log("Password Reset Data:", passwordData);
-    alert("Password reset functionality will be implemented later.");
-  };
+    setError("");
+    setSuccess("");
 
-  const handleDeleteAccount = () => {
-    alert("Account deletion functionality will be implemented later.");
+    if (form.next.length < 8) {
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+    if (form.next !== form.confirm) {
+      setError("New passwords don't match.");
+      return;
+    }
+    if (form.next === form.current) {
+      setError("Choose a password you haven't used here before.");
+      return;
+    }
+
+    setBusy(true);
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: me.email,
+      password: form.current,
+    });
+    if (verifyError) {
+      setBusy(false);
+      setError("Your current password is incorrect.");
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: form.next });
+    setBusy(false);
+
+    if (updateError) {
+      setError(errorMessage(updateError));
+      return;
+    }
+    setForm({ current: "", next: "", confirm: "" });
+    setSuccess("Password updated.");
   };
 
   return (
-    <div className="settings-wrapper">
-      <h2>Settings</h2>
+    <div className="settings-page">
+      <header className="view-head">
+        <div>
+          <p className="eyebrow">Settings</p>
+          <h1>Account & security</h1>
+        </div>
+      </header>
 
-      {/* Account Settings */}
-      <section className="settings-section">
-        <h3>Account Settings</h3>
-        <div className="account-setting">
-          <label>Email:</label>
-          <input type="email" value={userData.email} disabled />
+      <section className="set-card">
+        <h3>Account</h3>
+        <div className="set-row">
+          <div>
+            <span className="set-label">Email</span>
+            <strong>{me.email}</strong>
+          </div>
         </div>
-        <div className="account-setting">
-          <label>First Name:</label>
-          <input type="text" value={userData.first_name} disabled />
+        <div className="set-row danger-zone">
+          <div>
+            <span className="set-label">Delete account</span>
+            <p>Deleting your account removes your profile, photos and messages. Email us and we'll take care of it.</p>
+          </div>
+          <a className="btn btn-danger" href={`mailto:${SUPPORT_EMAIL}?subject=Delete my account`}>
+            Request deletion
+          </a>
         </div>
-        <button className="btn-danger" onClick={handleDeleteAccount}>
-          Delete Account
-        </button>
       </section>
 
-      {/* Password Reset */}
-      <section className="settings-section">
-        <h3>Password Reset</h3>
-        <form onSubmit={handleResetPassword}>
-          <div className="account-setting">
-            <label>Current Password:</label>
-            <input
-              type="password"
-              name="currentPassword"
-              value={passwordData.currentPassword}
-              onChange={handlePasswordChange}
-              required
-            />
+      <section className="set-card">
+        <h3>Change password</h3>
+        <form className="set-form" onSubmit={handlePasswordChange}>
+          <div className="field">
+            <label htmlFor="set-current">Current password</label>
+            <input id="set-current" className="input" type="password" autoComplete="current-password"
+              value={form.current} onChange={(e) => update("current", e.target.value)} required />
           </div>
-          <div className="account-setting">
-            <label>New Password:</label>
-            <input
-              type="password"
-              name="newPassword"
-              value={passwordData.newPassword}
-              onChange={handlePasswordChange}
-              required
-            />
+          <div className="set-grid">
+            <div className="field">
+              <label htmlFor="set-new">New password</label>
+              <input id="set-new" className="input" type="password" autoComplete="new-password"
+                value={form.next} onChange={(e) => update("next", e.target.value)} required />
+            </div>
+            <div className="field">
+              <label htmlFor="set-confirm">Confirm new password</label>
+              <input id="set-confirm" className="input" type="password" autoComplete="new-password"
+                value={form.confirm} onChange={(e) => update("confirm", e.target.value)} required />
+            </div>
           </div>
-          <div className="account-setting">
-            <label>Confirm New Password:</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={passwordData.confirmPassword}
-              onChange={handlePasswordChange}
-              required
-            />
+          {error && <div className="form-error" role="alert">{error}</div>}
+          {success && <div className="form-success" role="status">{success}</div>}
+          <div>
+            <button type="submit" className="btn btn-primary" disabled={busy}>
+              {busy ? "Updating…" : "Update password"}
+            </button>
           </div>
-          <button type="submit" className="btn-primary">
-            Reset Password
-          </button>
         </form>
       </section>
 
-      {/* Support / Legal */}
-      <section className="settings-section">
-        <h3>Support & Legal</h3>
-        <ul className="support-list">
-          <li>Help / FAQs</li>
-          <li>Privacy Policy</li>
-          <li>Terms & Conditions</li>
-          <li>Contact Support</li>
+      <section className="set-card">
+        <h3>Help & safety</h3>
+        <ul className="set-links">
+          <li><Link to="/contact"><Icon name="mail" size={18} /> Contact support</Link></li>
+          <li><Link to="/about"><Icon name="shield" size={18} /> How we keep members safe</Link></li>
         </ul>
+      </section>
+
+      <section className="set-card">
+        <button type="button" className="btn btn-ghost set-logout" onClick={onLogout}>
+          <Icon name="logout" size={18} /> Log out
+        </button>
       </section>
     </div>
   );

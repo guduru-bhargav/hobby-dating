@@ -1,194 +1,184 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import { supabase } from "../lib/supabase";
+import { getProfileByUserId } from "../api/profiles";
+import { countUnreadNotifications } from "../api/chat";
+import { errorMessage } from "../lib/utils";
 
 import ProfileMenu from "./ProfileMenu";
-import ProfileMain from "./ProfileMain";
-import SettingsMain from "./SettingsMain";
-import ChatList from "./ChatList";
-import FollowList from "./FollowList";
-import ChatBox from "./ChatBox";
 import BottomNav from "./BottomNav";
+import Discover from "./Discover";
+import ChatList from "./ChatList";
+import ChatBox from "./ChatBox";
+import ProfileMain from "./ProfileMain";
+import ProfileEdit from "./ProfileEdit";
+import SettingsMain from "./SettingsMain";
 
+// Views: discover | messages | profile | settings
 function MainPage() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeView, setActiveView] = useState("follow"); // ✅ default tab
-  const [notifications, setNotifications] = useState([]);
+  const navigate = useNavigate();
+  const [me, setMe] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [view, setView] = useState("discover");
+  const [chatTarget, setChatTarget] = useState(null); // profile row of the person being messaged
+  const [unread, setUnread] = useState(0);
 
-  // ✅ Follow system states
-  const [users, setUsers] = useState([]);
-  const [following, setFollowing] = useState(new Set());
-  const [selectedProfile, setSelectedProfile] = useState(null);
-
-  const [filters, setFilters] = useState({
-    age: "",
-    city: "",
-    distance: "",
-    gender: "",
-    hobbies: "",
-  });
-
-  // ✅ Get logged-in user
+  // Who is logged in, and their profile row
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUser(data.user);
-    });
-  }, []);
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData?.session?.user;
+        if (!user) {
+          navigate("/login", { replace: true });
+          return;
+        }
+        const { data, error } = await getProfileByUserId(user.id);
+        if (error) throw error;
+        if (!cancelled) {
+          setMe(user);
+          setProfile(data);
+        }
+      } catch (err) {
+        if (!cancelled) setLoadError(errorMessage(err, "Couldn't load your account."));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
-  // ✅ Notifications realtime
+  // Unread message badge, kept live by notification inserts and updates
+  const refreshUnread = useCallback(async () => {
+    if (!me?.id) return;
+    try {
+      setUnread(await countUnreadNotifications(me.id));
+    } catch {
+      setUnread(0);
+    }
+  }, [me?.id]);
+
   useEffect(() => {
-    if (!currentUser?.id) return;
-
-    fetchNotifications();
-
+    if (!me?.id) return;
+    refreshUnread();
     const channel = supabase
-      .channel("notifications_listener")
+      .channel(`notifications_${me.id}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${currentUser.id}`,
-        },
-        () => fetchNotifications()
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${me.id}` },
+        refreshUnread
       )
       .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [currentUser?.id]);
-
-  const fetchNotifications = async () => {
-    if (!currentUser?.id) return;
-
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", currentUser.id)
-      .eq("is_read", false);
-
-    setNotifications(data || []);
-  };
-
-  // ✅ Fetch browse users
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUserId = sessionData?.session?.user?.id;
-
-      let query = supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (currentUserId) query = query.neq("user_id", currentUserId);
-
-      const { data, error } = await query;
-
-      if (!error) setUsers(data || []);
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, [me?.id, refreshUnread]);
 
-    fetchUsers();
-  }, []);
-
-  // ✅ Helpers
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
+  const openChat = (otherProfile) => {
+    setChatTarget(otherProfile);
+    setView("messages");
   };
 
-  const toggleFollow = (id) => {
-    setFollowing((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
   };
 
-  const handleApplyFilters = () => {
-    console.log("Filters applied:", filters);
-    // Later → apply filtering logic
-  };
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="spinner" />
+      </div>
+    );
+  }
 
-  // ✅ Render middle content
-  const renderContent = () => {
-    switch (activeView) {
-      case "profile":
-        return <ProfileMain />;
+  if (loadError) {
+    return (
+      <div className="app-loading">
+        <div className="form-error" role="alert">{loadError}</div>
+      </div>
+    );
+  }
 
-      case "settings":
-        return <SettingsMain />;
+  // Signed in but no profile row (e.g. signup stopped halfway): finish it first
+  if (!profile) {
+    return (
+      <div className="setup-screen">
+        <ProfileEdit
+          me={me}
+          profile={null}
+          onSaved={(row) => setProfile(row)}
+          onCancel={handleLogout}
+          cancelLabel="Log out"
+        />
+      </div>
+    );
+  }
 
-      case "chat":
-        return <ChatList
-      currentUser={currentUser}
-      setSelectedProfile={setSelectedProfile}
-    />
+  const isMessages = view === "messages";
 
-      case "follow":
-      default:
-        return (
-          <FollowList
-            users={users}
-            following={following}
-            toggleFollow={toggleFollow}
-            calculateAge={calculateAge}
-            setSelectedProfile={setSelectedProfile}
-            selectedProfile={selectedProfile}
-            currentUser={currentUser}
-            filters={filters}
-            setFilters={setFilters}
-            handleApplyFilters={handleApplyFilters}
+  let content;
+  if (view === "discover") {
+    content = <Discover profile={profile} onMessage={openChat} />;
+  } else if (view === "messages") {
+    content = (
+      <div className={`messages-layout ${chatTarget ? "has-chat" : ""}`}>
+        <aside className="messages-list">
+          <header className="view-head compact">
+            <h1>Messages</h1>
+          </header>
+          <ChatList
+            meId={me.id}
+            selectedId={chatTarget?.user_id}
+            onSelect={(p) => setChatTarget(p)}
           />
-        );
-    }
-  };
+        </aside>
+        <div className="messages-chat">
+          {chatTarget ? (
+            <ChatBox
+              key={chatTarget.user_id}
+              meId={me.id}
+              profile={chatTarget}
+              onBack={() => setChatTarget(null)}
+            />
+          ) : (
+            <div className="chat-placeholder">
+              <h3>Select a conversation</h3>
+              <p>Pick someone from the list, or message a match from Discover.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  } else if (view === "profile") {
+    content = <ProfileMain me={me} profile={profile} onProfileUpdated={setProfile} />;
+  } else {
+    content = <SettingsMain me={me} onLogout={handleLogout} />;
+  }
 
   return (
-    <div className="layout">
-      <aside className="sidebar">
+    <div className={`app-shell ${isMessages ? "is-messages" : ""}`}>
+      <aside className="app-sidebar">
         <ProfileMenu
-          unreadCount={notifications.length}
-          currentUser={currentUser}
-          onNavigate={setActiveView}
-          activeView={activeView}
+          profile={profile}
+          unreadCount={unread}
+          activeView={view}
+          onNavigate={setView}
+          onLogout={handleLogout}
         />
       </aside>
 
-      <main className="main-content">
-        {renderContent()}
+      <main className="app-main">
+        {content}
       </main>
-      <div className="layout">
 
-        {/* ✅ Bottom Navigation (Mobile Only) */}
-        <BottomNav
-          activeView={activeView}
-          onNavigate={setActiveView}
-          unreadCount={notifications.length}
-        />
-      </div>
-
-      {/* ✅ Global ChatBox (optional if not inside FollowList) */}
-      {selectedProfile && (
-        <ChatBox
-          profile={selectedProfile}
-          currentUser={currentUser}
-          onClose={() => setSelectedProfile(null)}
-        />
-      )}
+      <BottomNav activeView={view} onNavigate={setView} unreadCount={unread} />
     </div>
   );
 }

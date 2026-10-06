@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Secrets (Supabase keys live in .env)
+.env
+.env.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

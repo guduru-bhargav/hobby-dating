@@ -1,277 +1,163 @@
-// import React from "react";
-// import "./Dashboard.css"; // use a separate CSS file for dashboard
-
-// function Dashboard() {
-//   return (
-//     <div className="dashboard-wrapper">
-//       <div className="dashboard-container">
-//         <h1>Welcome to Hobby Dating App ❤️</h1>
-//         <p>Find people who share your hobbies and interests!</p>
-//         <a href="/" className="dashboard-btn">Go Back Home</a>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Dashboard;
-
-
-
-import React, { useEffect, useState } from 'react';
-import './Dashboard.css';
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./Dashboard.css";
+import Icon from "./Icon";
 import { supabase } from "../lib/supabase";
 
-
-const profiles = [
-    { name: 'Angelica', age: 27, img: 'https://randomuser.me/api/portraits/women/68.jpg' },
-    { name: 'Norman', age: 29, img: 'https://randomuser.me/api/portraits/men/45.jpg' },
-    { name: 'Janine', age: 23, img: 'https://randomuser.me/api/portraits/women/65.jpg', desc: "Love to travel and discover beautiful places." },
-    { name: 'Angelica', age: 28, img: 'https://randomuser.me/api/portraits/women/44.jpg', desc: "Looking for my kind of man." },
-    { name: 'Alexander', age: 32, img: 'https://randomuser.me/api/portraits/men/12.jpg' },
-    { name: 'Francia', age: 34, img: 'https://randomuser.me/api/portraits/women/12.jpg' },
-    { name: 'Robert', age: 47, img: 'https://randomuser.me/api/portraits/men/15.jpg' },
+const FEATURES = [
+  { icon: "heart", title: "Match on interests", text: "Hobbies and what you're looking for come first, so every match has something to talk about." },
+  { icon: "shield", title: "Safety first", text: "Anti-scam protection and staff-reviewed profiles keep the community trustworthy." },
+  { icon: "chat", title: "Real conversations", text: "Private one-to-one chat that updates live, with no waiting for a reply to load." },
+  { icon: "filter", title: "Filters that work", text: "Narrow by age, city, hobbies and more. Pass on anyone who isn't right for you." },
 ];
 
-const features = [
-    { title: 'Protection', desc: 'Your safety is provided by leading anti-scam system.', icon: '🛡️' },
-    { title: 'Verification', desc: 'All members are personally confirmed by our staff.', icon: '📨' },
-    { title: 'Attention', desc: 'Receive lots of attention from attractive members online.', icon: '📣' },
-    { title: 'Communication', desc: 'Chat, send letters, call, share your photos and videos.', icon: '💬' },
+const STEPS = [
+  { n: "01", title: "Create your profile", text: "Add two photos, a few hobbies and what you're looking for." },
+  { n: "02", title: "Discover people", text: "Like or pass on people whose interests overlap with yours." },
+  { n: "03", title: "Start a conversation", text: "When you match, say hi. It's a one-to-one chat from the first message." },
 ];
 
-const howItWorks = [
-    { step: '01', title: 'Protection', desc: 'Create your profile by providing all necessary details.' },
-    { step: '02', title: 'Find Match', desc: 'Look for your soulmate over this dating platform.' },
-    { step: '03', title: 'Start Dating', desc: 'Start a new journey with your life partner.' },
-];
-
-const successStories = [
-    { title: 'Carmie & Lawrence', desc: 'One word frees us of all the weight and pain in life.', img: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80' },
-    { title: 'Francia & Mark', desc: 'Kindness in words creates confidence. Kindness in thinking creates profoundness.', img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80' },
-    { title: 'Angelica & Norman', desc: 'There is always some madness in love but there is also always some reason.', img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80' },
+// Decorative sample cards. These are stock photos, not members.
+const SAMPLE_CARDS = [
+  { img: "https://randomuser.me/api/portraits/women/44.jpg", name: "Sample", meta: "Photography · Travel", pos: "front" },
+  { img: "https://randomuser.me/api/portraits/men/45.jpg", name: "Sample", meta: "Music · Hiking", pos: "back" },
 ];
 
 export default function Dashboard() {
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
 
-    useEffect(() => {
-      const checkAuth = async () => {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData?.session?.user) {
-          // User is logged in, redirect to MainPage
-          navigate("/MainPage", { replace: true });
-        } else {
-          // Not logged in, show landing page
-          setLoading(false);
-        }
-      };
-      checkAuth();
-    }, [navigate]);
+  // Logged-in visitors skip the landing page
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      if (data?.session?.user) navigate("/MainPage", { replace: true });
+      else setChecking(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  if (checking) {
     return (
-        <>
-          {loading && <p>Checking authentication...</p>}
-          {!loading && (
-        <div className="dashboard">
-            <header className="header container">
-                <div className="logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>
-                    Hobby Dating
-                </div>                <nav className="nav">
-                    <Link to="/dashboard">Home</Link>
-                    <Link to="/about">About</Link>
-                    <Link to="/services">Services</Link>
-                    <Link to="/why-us">Why Us</Link>
-                    <Link to="/contact">Contact</Link>
-                    <button
-                        className="btn-outline"
-                        onClick={() => {
-                            navigate("/login");    // navigate to login page
-                            console.log("bhargav"); // log something
-                        }}
-                    >
-                        Login
-                    </button>
-
-
-                    <button
-                        className="btn-gradient"
-                        onClick={() => navigate("/signup")}
-                    >
-                        Join Now
-                    </button>
-                </nav>
-            </header>
-
-            {/* Hero */}
-            <section className="hero container">
-                <div className="hero-text">
-                    <h1>
-                        Love what you <br />
-                        <span>Do Together</span><br />
-                        On Cherish
-                    </h1>
-
-                    <p>We help our members find meaningful connections, so every love story has the chance to flourish.</p>
-                    <button
-                        className="btn-gradient"
-                        onClick={() => navigate("/signup")}
-                    >
-                        Get Started
-                    </button>
-                </div>
-                <div className="hero-profiles">
-                    {profiles.slice(0, 2).map(({ name, age, img }, i) => (
-                        <div key={i} className="profile-card">
-                            <img src={img} alt={name} />
-                            <div className="profile-info">
-                                <span>{name}, {age}</span>
-                                <svg className="heart-icon" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 
-                           4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 
-                           16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 
-                           11.54L12 21.35z" />
-                                </svg>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* New Added Profiles */}
-            <section className="new-profiles container">
-                <h2>New added profiles</h2>
-                <p>You are few steps away from meeting your special someone.</p>
-                <div className="new-profile-list">
-                    {profiles.map(({ name, age, img, desc }, i) => (
-                        <div key={i} className="new-profile-card">
-                            <img src={img} alt={name} />
-                            <div className="new-profile-info">
-                                <h4>{name}, {age}</h4>
-                                {desc && <p>{desc}</p>}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Why choose us */}
-            <section className="why-choose-us">
-                <div className="container">
-                    <h2>Why choose us?</h2>
-                    <p>Let’s find you life partner to enjoy life to be better and prosperous!</p>
-                    <div className="features-grid">
-                        {features.map(({ icon, title, desc }, i) => (
-                            <div key={i} className="feature-card">
-                                <div className="feature-icon">{icon}</div>
-                                <div className="feature-title">{title}</div>
-                                <div className="feature-desc">{desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* How it works */}
-            <section className="how-it-works container">
-                <h2>How it works</h2>
-                <p>
-                    Cherish is a dating platform that will help you out for this.<br />
-                    All you need to do is to follow these steps, and soon you will be dating the love of your life.
-                </p>
-                <div className="steps">
-                    {howItWorks.map(({ step, title, desc }, i) => (
-                        <div key={i} className="step-item">
-                            <div className="step-number">{step}</div>
-                            <div className="step-circle">
-                                <svg viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                </svg>
-                            </div>
-                            <div className="step-content">
-                                <div className="step-title">{title}</div>
-                                <div className="step-desc">{desc}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* People Joined */}
-            <section className="people-joined container">
-                <h2>People joined already!</h2>
-                <div className="people-stats">
-                    <div><span className="number">1800</span>Total Members</div>
-                    <div><span className="number">1280</span>Online Members</div>
-                    <div><span className="number">480</span>Women Online</div>
-                    <div><span className="number">600</span>Men Online</div>
-                </div>
-            </section>
-
-            {/* Success Stories */}
-            <section className="success-stories container">
-                <h2>Success Stories</h2>
-                <div className="story-list">
-                    {successStories.map(({ title, desc, img }, i) => (
-                        <div key={i} className="story-card">
-                            <img src={img} alt={title} />
-                            <div className="story-content">
-                                <div className="story-title">{title}</div>
-                                <div className="story-desc">{desc}</div>
-                                <button className="read-more">Read More</button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer>
-                <div className="footer-container container">
-                    <div className="footer-logo">cherish</div>
-                    <div className="footer-section">
-                        <h5>Our Company</h5>
-                        <ul>
-                            <li>About Us</li>
-                            <li>Careers</li>
-                            <li>Terms & Conditions</li>
-                            <li>Privacy Policy</li>
-                        </ul>
-                    </div>
-                    <div className="footer-section">
-                        <h5>Help Center</h5>
-                        <ul>
-                            <li>Help Center</li>
-                            <li>FAQ</li>
-                            <li>Report Abuse</li>
-                            <li>Safety Tips</li>
-                        </ul>
-                    </div>
-                    <div className="footer-section">
-                        <h5>Follow Us</h5>
-                        <ul>
-                            <li>Facebook</li>
-                            <li>Twitter</li>
-                            <li>Youtube</li>
-                            <li>Instagram</li>
-                        </ul>
-                    </div>
-                    <div className="footer-section">
-                        <h5>Contact Us</h5>
-                        <ul>
-                            <li>info@hda.com</li>
-                            <li>(123) 0000 000</li>
-                            <li>Location sample here</li>
-                        </ul>
-                    </div>
-                    <div className="newsletter">
-                        <input type="email" placeholder="Enter Email" />
-                        <button>Submit</button>
-                    </div>
-                </div>
-            </footer>
-        </div>
-          )}
-        </>
+      <div className="landing-loading">
+        <div className="spinner" aria-label="Loading" />
+      </div>
     );
+  }
+
+  return (
+    <div className="landing">
+      <header className="landing-nav">
+        <Link to="/dashboard" className="landing-brand">
+          <span className="brand-mark"><Icon name="logo" size={16} /></span>
+          Cherish
+        </Link>
+        <nav className="landing-links" aria-label="Site">
+          <Link to="/about">About</Link>
+          <Link to="/services">Services</Link>
+          <Link to="/why-us">Why us</Link>
+          <Link to="/contact">Contact</Link>
+        </nav>
+        <div className="landing-cta">
+          <Link to="/login" className="btn btn-ghost btn-sm">Log in</Link>
+          <Link to="/signup" className="btn btn-primary btn-sm">Join free</Link>
+        </div>
+      </header>
+
+      <section className="hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Hobby dating, reimagined</p>
+          <h1>
+            Love what you <span className="grad">do together.</span>
+          </h1>
+          <p className="hero-sub">
+            Cherish connects people through shared hobbies and interests, so every
+            conversation starts with something real.
+          </p>
+          <div className="hero-actions">
+            <button type="button" className="btn btn-primary btn-lg" onClick={() => navigate("/signup")}>
+              Get started <Icon name="arrowRight" size={18} />
+            </button>
+            <Link to="/login" className="btn btn-ghost btn-lg">I have an account</Link>
+          </div>
+          <ul className="hero-trust">
+            <li><Icon name="shield" size={16} /> Verified profiles</li>
+            <li><Icon name="heart" size={16} /> Free to join</li>
+          </ul>
+        </div>
+
+        <div className="hero-visual" aria-hidden="true">
+          {SAMPLE_CARDS.map((card) => (
+            <figure key={card.pos} className={`hero-card ${card.pos}`}>
+              <img src={card.img} alt="" />
+              <figcaption>
+                <strong>{card.name}</strong>
+                <span>{card.meta}</span>
+              </figcaption>
+            </figure>
+          ))}
+          <div className="hero-badge">
+            <Icon name="heart" size={16} strokeWidth={0} /> It's a match
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <p className="eyebrow">Why Cherish</p>
+          <h2>Built around what you enjoy</h2>
+        </div>
+        <div className="feature-grid">
+          {FEATURES.map((f) => (
+            <article key={f.title} className="feature-card">
+              <div className="feature-icon"><Icon name={f.icon} size={22} /></div>
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section section-alt">
+        <div className="section-head">
+          <p className="eyebrow">How it works</p>
+          <h2>Three steps to your first conversation</h2>
+        </div>
+        <ol className="steps">
+          {STEPS.map((s) => (
+            <li key={s.n} className="step">
+              <span className="step-n">{s.n}</span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="cta-band">
+        <h2>Your next great conversation starts with a shared hobby.</h2>
+        <button type="button" className="btn btn-light btn-lg" onClick={() => navigate("/signup")}>
+          Create your profile
+        </button>
+      </section>
+
+      <footer className="landing-footer">
+        <div className="landing-brand">
+          <span className="brand-mark"><Icon name="logo" size={16} /></span>
+          Cherish
+        </div>
+        <div className="footer-links">
+          <Link to="/about">About</Link>
+          <Link to="/services">Services</Link>
+          <Link to="/why-us">Why us</Link>
+          <Link to="/contact">Contact</Link>
+          <a href="mailto:info@hda.com">info@hda.com</a>
+        </div>
+        <small>© {new Date().getFullYear()} Cherish. All rights reserved.</small>
+      </footer>
+    </div>
+  );
 }

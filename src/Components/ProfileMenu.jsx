@@ -1,87 +1,48 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import React from "react";
+import Icon from "./Icon";
+import { photoOf } from "../lib/utils";
+import { NAV_ITEMS } from "../lib/nav";
 import "./ProfileMenu.css";
 
-function ProfileMenu({ unreadCount, currentUser, onNavigate, activeView }) {
-  const [profile, setProfile] = useState(null);
-
-  useEffect(() => {
-    const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData?.session?.user;
-      if (!user) return;
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      setProfile(data || null);
-    };
-
-    load();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  };
-
-  const img1 = profile?.photo_1 || "https://i.pravatar.cc/100?img=12";
-
+// Desktop sidebar: brand, the viewer's mini profile, navigation and logout
+function ProfileMenu({ profile, unreadCount, activeView, onNavigate, onLogout }) {
   return (
-    <div className="profile-wrapper">
-      <div className="sidebar-header">
-        <div className="profile-icon">
-          <img className="primary-img" src={img1} alt="Profile" />
-          <span className="online-dot"></span>
-
-          {unreadCount > 0 && (
-            <span className="notification-badge">{unreadCount}</span>
-          )}
-        </div>
-
-        <h2 className="sidebar-title">
-          {profile?.first_name || "User"}
-        </h2>
+    <div className="sidebar">
+      <div className="sidebar-brand">
+        <span className="brand-mark"><Icon name="logo" size={16} /></span>
+        Cherish
       </div>
 
-      <nav className="sidebar-menu">
+      <button type="button" className="sidebar-me" onClick={() => onNavigate("profile")}>
+        <img src={photoOf(profile, 1)} alt="" />
+        <span>
+          <strong>{profile?.first_name || "You"}</strong>
+          <small>{profile?.location_city || "Complete your profile"}</small>
+        </span>
+      </button>
 
-        <button
-          className={activeView === "follow" ? "active" : ""}
-          onClick={() => onNavigate("follow")}
-        >
-          ❤️ Follow
-        </button>
-
-        <button
-          className={activeView === "chat" ? "active" : ""}
-          onClick={() => onNavigate("chat")}
-        >
-          💬 Chat
-        </button>
-
-        <button
-          className={activeView === "profile" ? "active" : ""}
-          onClick={() => onNavigate("profile")}
-        >
-          👤 Profile
-        </button>
-
-        <button
-          className={activeView === "settings" ? "active" : ""}
-          onClick={() => onNavigate("settings")}
-        >
-          ⚙ Settings
-        </button>
-
-        <button className="logout" onClick={handleLogout}>
-          🚪 Logout
-        </button>
-
+      <nav className="sidebar-nav" aria-label="Main">
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={`nav-item ${activeView === item.key ? "active" : ""}`}
+            onClick={() => onNavigate(item.key)}
+            aria-current={activeView === item.key ? "page" : undefined}
+          >
+            <Icon name={item.icon} size={20} />
+            <span>{item.label}</span>
+            {item.key === "messages" && unreadCount > 0 && (
+              <span className="count-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+            )}
+          </button>
+        ))}
       </nav>
+
+      <button type="button" className="nav-item logout" onClick={onLogout}>
+        <Icon name="logout" size={20} />
+        <span>Log out</span>
+      </button>
     </div>
   );
 }
