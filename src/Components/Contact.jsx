@@ -1,270 +1,160 @@
 import React, { useState } from "react";
 import "./Contact.css";
+import PublicLayout, { PageHero, Section } from "./PublicLayout";
+import Icon from "./Icon";
 import { supabase } from "../lib/supabase";
+import { errorMessage } from "../lib/utils";
+
+const DETAILS = [
+  { icon: "mail", label: "Email", value: "support@cherish.com", href: "mailto:support@cherish.com" },
+  { icon: "phone", label: "Phone", value: "+91 7000-7001-00", href: "tel:+917000700100" },
+  { icon: "clock", label: "Hours", value: "Mon – Fri, 9 AM – 6 PM IST" },
+  { icon: "pin", label: "Based in", value: "Bangalore, India" },
+];
+
+const FAQS = [
+  {
+    q: "How do I report a profile?",
+    a: "Email us with the profile's first name, the city, and what happened. Include any screenshots that help.",
+  },
+  {
+    q: "Is my data safe?",
+    a: "Your data is stored with Supabase and sent over encrypted connections. Only the profile you publish is visible to other members.",
+  },
+  {
+    q: "How do I delete my account?",
+    a: "Go to Settings and select Request deletion. That opens an email to us, and we'll remove your profile, photos and messages.",
+  },
+  {
+    q: "Are there any fees?",
+    a: "Cherish is free to join and use.",
+  },
+  {
+    q: "Can I change my hobbies?",
+    a: "Yes. Open My profile, select Edit profile, and update your hobbies. Changes show up straight away.",
+  },
+  {
+    q: "How does Discover choose people?",
+    a: "You see members who match your 'Interested in' preference and who are interested in you. You can narrow the list by age, city, gender and hobbies.",
+  },
+];
+
+const EMPTY = { name: "", email: "", subject: "", message: "" };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function Contact() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState(EMPTY);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const update = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setSent(false);
 
-    // Validation
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.subject.trim() ||
-      !formData.message.trim()
-    ) {
-      setError("Please fill in all fields");
-      setLoading(false);
+    if (!form.name.trim() || !form.email.trim() || !form.subject.trim() || !form.message.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (!EMAIL_RE.test(form.email.trim())) {
+      setError("Please enter a valid email address.");
       return;
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address");
-      setLoading(false);
+    setBusy(true);
+    const { error: dbError } = await supabase.from("contact_messages").insert({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      subject: form.subject.trim(),
+      message: form.message.trim(),
+    });
+    setBusy(false);
+
+    // Only report success when the message was actually stored
+    if (dbError) {
+      setError(`We couldn't send your message. Please email support@cherish.com instead. (${errorMessage(dbError)})`);
       return;
     }
-
-    try {
-      // Store contact message in Supabase
-      const { error: dbError } = await supabase.from("contact_messages").insert([
-        {
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          created_at: new Date(),
-        },
-      ]);
-
-      if (dbError) {
-        console.error("Database error:", dbError);
-        // If table doesn't exist, show success anyway (message still attempted)
-        setSubmitted(true);
-      } else {
-        setSubmitted(true);
-      }
-
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSubmitted(false);
-      }, 5000);
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      // Show success anyway for better UX
-      setSubmitted(true);
-      setTimeout(() => {
-        setSubmitted(false);
-      }, 5000);
-    } finally {
-      setLoading(false);
-    }
+    setForm(EMPTY);
+    setSent(true);
   };
 
   return (
-    <div className="contact-page">
-      {/* Hero Section */}
-      <section className="contact-hero">
-        <h1>Get In Touch</h1>
-        <p>Have questions or feedback? We'd love to hear from you!</p>
-      </section>
+    <PublicLayout>
+      <PageHero
+        eyebrow="Contact"
+        title="Get in touch"
+        subtitle="Questions, feedback or a safety concern? We'd love to hear from you."
+      />
 
-      {/* Main Contact Section */}
-      <section className="contact-main">
-        <div className="contact-container">
-          <div className="contact-info">
+      <Section>
+        <div className="contact-layout">
+          <aside className="contact-info">
             <h2>Contact Cherish</h2>
-            <p className="intro-text">
-              Reach out to us for any inquiries, feedback, or support. Our team is here to help!
-            </p>
+            <p>Reach out for questions, feedback or support.</p>
+            <ul className="contact-details">
+              {DETAILS.map((d) => (
+                <li key={d.label}>
+                  <span className="pub-icon"><Icon name={d.icon} size={20} /></span>
+                  <div>
+                    <small>{d.label}</small>
+                    {d.href ? <a href={d.href}>{d.value}</a> : <strong>{d.value}</strong>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </aside>
 
-            <div className="contact-details">
-              <div className="detail-item">
-                <div className="detail-icon">📧</div>
-                <div className="detail-content">
-                  <h4>Email</h4>
-                  <p>support@cherish.com</p>
-                </div>
+          <form className="contact-form" onSubmit={handleSubmit} noValidate>
+            <h3>Send us a message</h3>
+
+            <div className="contact-grid">
+              <div className="field">
+                <label htmlFor="ct-name">Full name</label>
+                <input id="ct-name" className="input" name="name" value={form.name} onChange={update} />
               </div>
-
-              <div className="detail-item">
-                <div className="detail-icon">📱</div>
-                <div className="detail-content">
-                  <h4>Phone</h4>
-                  <p>+91 7000-7001-00</p>
-                </div>
-              </div>
-
-              <div className="detail-item">
-                <div className="detail-icon">⏰</div>
-                <div className="detail-content">
-                  <h4>Hours</h4>
-                  <p>Mon - Fri: 9 AM - 6 PM IST</p>
-                </div>
-              </div>
-
-              <div className="detail-item">
-                <div className="detail-icon">📍</div>
-                <div className="detail-content">
-                  <h4>Location</h4>
-                  <p>Bangalore, India</p>
-                </div>
+              <div className="field">
+                <label htmlFor="ct-email">Email</label>
+                <input id="ct-email" className="input" type="email" name="email" value={form.email} onChange={update} />
               </div>
             </div>
 
-            <div className="social-links">
-              <h4>Follow Us</h4>
-              <div className="social-icons">
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-icon">
-                  𝕏
-                </a>
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-icon">
-                  f
-                </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-icon">
-                  📷
-                </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-icon">
-                  in
-                </a>
-              </div>
+            <div className="field">
+              <label htmlFor="ct-subject">Subject</label>
+              <input id="ct-subject" className="input" name="subject" value={form.subject} onChange={update}
+                placeholder="e.g. Feedback, Safety, Account help" />
             </div>
-          </div>
 
-          {/* Contact Form */}
-          <div className="contact-form-container">
-            <form onSubmit={handleSubmit} className="contact-form">
-              <h3>Send us a Message</h3>
+            <div className="field">
+              <label htmlFor="ct-message">Message</label>
+              <textarea id="ct-message" className="input" name="message" rows={6} value={form.message} onChange={update}
+                placeholder="Tell us what's on your mind" />
+            </div>
 
-              {error && <div className="error-message">{error}</div>}
-              {submitted && (
-                <div className="success-message">
-                  ✓ Thank you! Your message has been sent successfully. We'll get back to you soon!
-                </div>
-              )}
+            {error && <div className="form-error" role="alert">{error}</div>}
+            {sent && <div className="form-success" role="status">Thanks! Your message is on its way. We'll reply by email.</div>}
 
-              <div className="form-group">
-                <label htmlFor="name">Full Name *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Your full name"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="email">Email Address *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="subject">Subject *</label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  placeholder="e.g., Bug Report, Feedback, Support"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="message">Message *</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Tell us your thoughts, suggestions, or concerns..."
-                  rows="6"
-                  required
-                ></textarea>
-              </div>
-
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? "Sending..." : "Send Message"}
-              </button>
-            </form>
-          </div>
+            <button type="submit" className="btn btn-primary" disabled={busy}>
+              {busy ? "Sending…" : "Send message"}
+            </button>
+          </form>
         </div>
-      </section>
+      </Section>
 
-      {/* FAQ Section */}
-      <section className="faq-section">
-        <div className="faq-container">
-          <h2>Frequently Asked Questions</h2>
-          <div className="faq-grid">
-            <div className="faq-item">
-              <h4>How do I report a user?</h4>
-              <p>Use the report button on any user's profile. Our team will review and take appropriate action within 24 hours.</p>
-            </div>
-            <div className="faq-item">
-              <h4>Is my data safe?</h4>
-              <p>Yes! We use industry-standard encryption and never share your data with third parties. Your privacy is our priority.</p>
-            </div>
-            <div className="faq-item">
-              <h4>How do I delete my account?</h4>
-              <p>Go to Settings, scroll to the bottom, and click "Delete Account". Your data will be permanently removed within 30 days.</p>
-            </div>
-            <div className="faq-item">
-              <h4>Are there any fees?</h4>
-              <p>Cherish is completely free! All core features are available at no cost. Premium features coming soon.</p>
-            </div>
-            <div className="faq-item">
-              <h4>Can I change my hobbies?</h4>
-              <p>Absolutely! Go to your Profile, click Edit, and update your hobbies. Changes take effect immediately.</p>
-            </div>
-            <div className="faq-item">
-              <h4>How are matches calculated?</h4>
-              <p>We match users based on shared hobbies, location preferences, age range, and other profile factors for best compatibility.</p>
-            </div>
-          </div>
+      <Section alt eyebrow="FAQ" title="Frequently asked questions">
+        <div className="faq-list">
+          {FAQS.map((f) => (
+            <details key={f.q} className="faq-item">
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
         </div>
-      </section>
-    </div>
+      </Section>
+    </PublicLayout>
   );
 }
 

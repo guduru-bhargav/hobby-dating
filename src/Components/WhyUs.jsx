@@ -1,226 +1,88 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./WhyUs.css";
+import PublicLayout, { PageHero, Section } from "./PublicLayout";
+import Icon from "./Icon";
+
+const BENEFITS = [
+  { icon: "heart", title: "Hobby-first profiles", text: "Your interests are on show from the start, so you connect over things you both care about." },
+  { icon: "shield", title: "Verified sign-up", text: "Every account confirms its email address before it can be used." },
+  { icon: "pin", title: "Six Indian cities", text: "Mumbai, Delhi, Bangalore, Hyderabad, Chennai and Pune, with a city filter on Discover." },
+  { icon: "chat", title: "Live one-to-one chat", text: "Messages arrive instantly, and matches can talk right away." },
+  { icon: "lock", title: "Only your profile is public", text: "Your login details and private messages are never shown to other members." },
+  { icon: "sparkle", title: "Free to join", text: "Create a profile, discover people and chat without paying anything." },
+];
+
+const INCLUDED = [
+  "Create a profile with two photos and your hobbies",
+  "Discover deck with like, pass and message actions",
+  "Filters by age, city, gender and hobbies",
+  "Matches when you both like each other",
+  "One-to-one chat with unread badges",
+  "Profile editor with a completeness meter",
+  "Password change and email-based account deletion",
+];
+
+const TIPS = [
+  { title: "Fill in your hobbies", text: "Specific hobbies (\"trail running\", \"film photography\") lead to better conversations than generic ones." },
+  { title: "Use two clear photos", text: "One face photo and one that shows what you enjoy works well. Members see both on your card." },
+  { title: "Start with the hobby", text: "Mention something you both like in your first message. It's an easy way to get talking." },
+  { title: "Keep your profile fresh", text: "Update your details as your interests change. A complete profile shows up more in searches." },
+];
 
 function WhyUs() {
-  const testimonials = [
-    {
-      id: 1,
-      name: "Priya Sharma",
-      location: "Mumbai",
-      hobby: "Photography",
-      content:
-        "Finally found someone who shares my passion for photography! We've been exploring the city together capturing beautiful moments.",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "Arjun Patel",
-      location: "Bangalore",
-      hobby: "Hiking",
-      content:
-        "The hobby-based matching is incredible. Met my girlfriend on a hiking trip organized through the app. Best decision ever!",
-      rating: 5,
-    },
-    {
-      id: 3,
-      name: "Anjali Desai",
-      location: "Delhi",
-      hobby: "Book Club",
-      content:
-        "Love how I can find people who actually read and discuss books. This app gets what matters - shared interests!",
-      rating: 5,
-    },
-    {
-      id: 4,
-      name: "Rohan Kumar",
-      location: "Pune",
-      hobby: "Coding & Tech",
-      content:
-        "Met brilliant people through this platform. We not only date but collaborate on projects. Unique experience!",
-      rating: 5,
-    },
-  ];
-
-  const benefits = [
-    {
-      icon: "🎯",
-      title: "Hobby-First Matching",
-      description: "Find people who share your actual interests, not just your photos",
-    },
-    {
-      icon: "💯",
-      title: "Verified Members",
-      description: "All members are verified to ensure authentic and safe connections",
-    },
-    {
-      icon: "🌍",
-      title: "15+ Indian Cities",
-      description: "Connect with hobby enthusiasts across India with city filters",
-    },
-    {
-      icon: "💬",
-      title: "Real-Time Chat",
-      description: "Message matches instantly and get to know them before meeting",
-    },
-    {
-      icon: "🛡️",
-      title: "Privacy First",
-      description: "Your data is encrypted and never shared with third parties",
-    },
-    {
-      icon: "🚀",
-      title: "Smart Recommendations",
-      description: "AI-powered matching based on hobbies, interests, and location",
-    },
-  ];
-
   return (
-    <div className="why-us-page">
-      {/* Hero Section */}
-      <section className="why-us-hero">
-        <h1>Why Choose Cherish?</h1>
-        <p>The Hobby-First Dating App for Meaningful Connections</p>
-      </section>
+    <PublicLayout>
+      <PageHero
+        eyebrow="Why Cherish"
+        title="The hobby-first dating app for meaningful connections"
+        subtitle="We focus on shared passions, genuine interests and real compatibility."
+      />
 
-      {/* Why Hobby Dating Section */}
-      <section className="why-section">
-        <div className="why-container">
-          <h2>Why Hobby Dating?</h2>
-          <p className="section-intro">
-            Traditional dating apps focus on appearance. We focus on what matters — shared passions, genuine interests, and real compatibility.
-          </p>
-          <div className="benefits-grid">
-            {benefits.map((benefit) => (
-              <div key={benefit.title} className="benefit-card">
-                <div className="benefit-icon">{benefit.icon}</div>
-                <h3>{benefit.title}</h3>
-                <p>{benefit.description}</p>
-              </div>
-            ))}
-          </div>
+      <Section eyebrow="The difference" title="Why Hobby Dating?" intro="Many dating apps focus on appearance. We start with what you enjoy doing.">
+        <div className="pub-grid">
+          {BENEFITS.map((b) => (
+            <article key={b.title} className="pub-card">
+              <span className="pub-icon"><Icon name={b.icon} size={22} /></span>
+              <h3>{b.title}</h3>
+              <p>{b.text}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      <Section alt eyebrow="Included" title="What you get, free">
+        <ul className="why-included">
+          {INCLUDED.map((item) => (
+            <li key={item}>
+              <span className="why-check"><Icon name="check" size={16} strokeWidth={3} /></span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section eyebrow="Getting started" title="Tips for better matches">
+        <div className="pub-grid">
+          {TIPS.map((t, i) => (
+            <article key={t.title} className="pub-card">
+              <span className="why-tip-n">{i + 1}</span>
+              <h3>{t.title}</h3>
+              <p>{t.text}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      <section className="pub-cta-band">
+        <h2>Find your hobby match today</h2>
+        <p>Join in a few minutes and start discovering people who share your interests.</p>
+        <div className="hero-actions">
+          <Link to="/signup" className="btn btn-light btn-lg">Get started</Link>
+          <Link to="/services" className="btn btn-ghost btn-lg">Explore services</Link>
         </div>
       </section>
-
-      {/* Comparison Section */}
-      <section className="comparison-section">
-        <div className="comparison-container">
-          <h2>How We Compare</h2>
-          <div className="comparison-table-wrapper">
-            <table className="comparison-table">
-              <thead>
-                <tr>
-                  <th>Features</th>
-                  <th className="app-column">
-                    <span className="app-name">Cherish</span>
-                  </th>
-                  <th className="other-column">
-                    <span>Traditional Apps</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Hobby-Based Matching</td>
-                  <td className="checkmark">✓</td>
-                  <td className="cross">✗</td>
-                </tr>
-                <tr>
-                  <td>Member Verification</td>
-                  <td className="checkmark">✓</td>
-                  <td className="cross">✗</td>
-                </tr>
-                <tr>
-                  <td>City-Based Filtering</td>
-                  <td className="checkmark">✓</td>
-                  <td className="checkmark">✓</td>
-                </tr>
-                <tr>
-                  <td>Real-Time Messaging</td>
-                  <td className="checkmark">✓</td>
-                  <td className="checkmark">✓</td>
-                </tr>
-                <tr>
-                  <td>Privacy Protection</td>
-                  <td className="checkmark">✓</td>
-                  <td className="cross">✗</td>
-                </tr>
-                <tr>
-                  <td>Photo Gallery</td>
-                  <td className="checkmark">✓</td>
-                  <td className="checkmark">✓</td>
-                </tr>
-                <tr>
-                  <td>Smart Recommendations</td>
-                  <td className="checkmark">✓</td>
-                  <td className="cross">✗</td>
-                </tr>
-                <tr>
-                  <td>Community Features</td>
-                  <td className="checkmark">✓</td>
-                  <td className="cross">✗</td>
-                </tr>
-                <tr>
-                  <td>Safety & Blocking</td>
-                  <td className="checkmark">✓</td>
-                  <td className="checkmark">✓</td>
-                </tr>
-                <tr>
-                  <td>Cost-Free</td>
-                  <td className="checkmark">✓</td>
-                  <td className="cross">✗ (Premium)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="testimonials-section">
-        <div className="testimonials-container">
-          <h2>Success Stories</h2>
-          <p className="section-intro">
-            Real stories from real members who found meaningful connections
-          </p>
-          <div className="testimonials-grid">
-            {testimonials.map((testimonial) => (
-              <div key={testimonial.id} className="testimonial-card">
-                <div className="testimonial-header">
-                  <div className="testimonial-avatar">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div className="testimonial-info">
-                    <h4>{testimonial.name}</h4>
-                    <p className="hobby-tag">{testimonial.hobby}</p>
-                  </div>
-                </div>
-                <div className="stars">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i}>⭐</span>
-                  ))}
-                </div>
-                <p className="testimonial-content">"{testimonial.content}"</p>
-                <p className="testimonial-location">📍 {testimonial.location}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="why-us-cta">
-        <h2>Find Your Hobby Match Today</h2>
-        <p>Join thousands of people finding love through shared passions</p>
-        <div className="cta-buttons">
-          <a href="/signup" className="btn btn-primary">
-            Get Started
-          </a>
-          <a href="/services" className="btn btn-secondary">
-            Learn More
-          </a>
-        </div>
-      </section>
-    </div>
+    </PublicLayout>
   );
 }
 

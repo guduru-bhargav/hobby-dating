@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 
 const FEATURES = [
   { icon: "heart", title: "Match on interests", text: "Hobbies and what you're looking for come first, so every match has something to talk about." },
-  { icon: "shield", title: "Safety first", text: "Anti-scam protection and staff-reviewed profiles keep the community trustworthy." },
+  { icon: "shield", title: "Safety first", text: "Every account confirms its email address, and only the profile you publish is visible to others." },
   { icon: "chat", title: "Real conversations", text: "Private one-to-one chat that updates live, with no waiting for a reply to load." },
   { icon: "filter", title: "Filters that work", text: "Narrow by age, city, hobbies and more. Pass on anyone who isn't right for you." },
 ];
@@ -84,7 +84,7 @@ export default function Dashboard() {
             <Link to="/login" className="btn btn-ghost btn-lg">I have an account</Link>
           </div>
           <ul className="hero-trust">
-            <li><Icon name="shield" size={16} /> Verified profiles</li>
+            <li><Icon name="shield" size={16} /> Email-verified accounts</li>
             <li><Icon name="heart" size={16} /> Free to join</li>
           </ul>
         </div>

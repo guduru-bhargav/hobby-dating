@@ -1,230 +1,92 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./Services.css";
+import PublicLayout, { PageHero, Section } from "./PublicLayout";
+import Icon from "./Icon";
+
+// Only features the app actually has today
+const FEATURES = [
+  { icon: "heart", title: "Hobby-first profiles", text: "Your hobbies are front and centre on your profile, so people see what you love before anything else." },
+  { icon: "discover", title: "Discover & match", text: "Like or pass on people one at a time. When you both like each other, you get a match and can start chatting." },
+  { icon: "chat", title: "One-to-one chat", text: "Message your matches in a private conversation that updates live, with unread badges so you never miss a reply." },
+  { icon: "filter", title: "Smart filters", text: "Narrow your deck by age, city, gender and hobbies. Your 'Interested in' preference is always applied." },
+  { icon: "camera", title: "Two photos per profile", text: "Show more of yourself. Members swipe between your two photos on your card." },
+  { icon: "users", title: "Profile editor", text: "Update your details, photos and hobbies at any time. A completeness meter shows what's left to add." },
+  { icon: "shield", title: "Verified sign-up", text: "Every account confirms its email address with a one-time code before it can be used." },
+  { icon: "settings", title: "Account controls", text: "Change your password any time, and request account deletion by email." },
+];
+
+const STEPS = [
+  { n: "1", title: "Create your profile", text: "Sign up with your email, add your details and pick your hobbies." },
+  { n: "2", title: "Add two photos", text: "Clear photos help people get to know you before they say hi." },
+  { n: "3", title: "Discover people", text: "Browse your deck and like or pass. Use filters to focus your search." },
+  { n: "4", title: "Chat when you match", text: "A mutual like opens the door. Start a one-to-one conversation right away." },
+  { n: "5", title: "Meet up", text: "Plan a date around something you both enjoy." },
+];
+
+const SAFETY = [
+  { icon: "mail", title: "Verified sign-up", text: "Each account confirms its email address with a one-time code." },
+  { icon: "lock", title: "Private by design", text: "Only the profile you publish is visible to other members. Your login details are never shown." },
+  { icon: "shield", title: "Report a profile", text: "Email us with the profile name and what happened, and we'll look into it." },
+  { icon: "chat", title: "Private messages", text: "Conversations are between two members. Nobody else can read them." },
+];
 
 function Services() {
-  const services = [
-    {
-      icon: "🎯",
-      title: "Hobby-Based Matching",
-      description:
-        "Find matches who share your passions. Our smart algorithm connects you with people who love the same hobbies—photography, travel, music, sports, and more.",
-    },
-    {
-      icon: "💬",
-      title: "Real-Time Chat",
-      description:
-        "Connect instantly with your matches. Our secure, real-time messaging lets you get to know someone before meeting in person.",
-    },
-    {
-      icon: "🔍",
-      title: "Advanced Filters",
-      description:
-        "Customize your search by age, location, gender preference, hobbies, and dating intent. Find exactly who you're looking for.",
-    },
-    {
-      icon: "✅",
-      title: "Profile Verification",
-      description:
-        "Build trust in our community. Get verified with a badge and see which members are verified—safety is our priority.",
-    },
-    {
-      icon: "📸",
-      title: "Photo Upload & Gallery",
-      description:
-        "Showcase your best self with up to 2+ profile photos. Use high-quality images to make a great first impression.",
-    },
-    {
-      icon: "📍",
-      title: "Location-Based Discovery",
-      description:
-        "Find people near you by filtering within 5-100 km. Distance filter helps you discover local matches easily.",
-    },
-    {
-      icon: "🏆",
-      title: "Hobby Communities",
-      description:
-        "Join hobby-specific groups, discover trending interests in your area, and connect with like-minded people.",
-    },
-    {
-      icon: "🛡️",
-      title: "Safety & Privacy Controls",
-      description:
-        "Report and block unwanted users. Full control over who sees your profile and your personal information.",
-    },
-    {
-      icon: "⚡",
-      title: "Instant Notifications",
-      description:
-        "Get real-time alerts when someone likes you, messages you, or your hobby match is online. Never miss a connection.",
-    },
-    {
-      icon: "🌍",
-      title: "Multi-City Support",
-      description:
-        "Available in all major Indian cities—Mumbai, Delhi, Bangalore, Hyderabad, Pune, Chennai, and growing every day.",
-    },
-    {
-      icon: "📊",
-      title: "Smart Recommendations",
-      description:
-        "AI-powered suggestions based on your profile and preferences. Discover matches you'll actually connect with.",
-    },
-    {
-      icon: "🎁",
-      title: "Success Stories",
-      description:
-        "Read real stories of people who found love through shared hobbies. Your story could be next!",
-    },
-  ];
-
-  const steps = [
-    {
-      number: "1",
-      title: "Create Your Profile",
-      description: "Sign up with email and set up your profile with your hobbies and interests.",
-    },
-    {
-      number: "2",
-      title: "Upload Photos",
-      description: "Add 2+ photos to showcase your personality and increase match quality.",
-    },
-    {
-      number: "3",
-      title: "Get Matched",
-      description: "Browse and discover matches based on shared hobbies and preferences.",
-    },
-    {
-      number: "4",
-      title: "Connect & Chat",
-      description: "Message your matches and get to know them better before meeting.",
-    },
-    {
-      number: "5",
-      title: "Meet & Fall in Love",
-      description: "Plan dates around your shared hobbies and build meaningful relationships.",
-    },
-  ];
-
   return (
-    <div className="services-page">
-      {/* Hero Section */}
-      <section className="services-hero">
-        <div className="hero-content">
-          <h1>Our Services</h1>
-          <p className="hero-subtitle">
-            Everything you need to find love through shared hobbies
-          </p>
-        </div>
-      </section>
+    <PublicLayout>
+      <PageHero
+        eyebrow="Our services"
+        title="Everything you need to find love through shared hobbies"
+        subtitle="Discover people who enjoy what you enjoy, then talk about it."
+      />
 
-      {/* Introduction Section */}
-      <section className="intro-section">
-        <div className="container">
-          <h2>Why Choose Hobby Dating?</h2>
-          <p className="intro-text">
-            Unlike traditional dating apps that focus on swiping and location, Hobby Dating puts 
-            your passions first. We believe lasting relationships are built on shared interests, 
-            mutual hobbies, and genuine compatibility. Our platform is designed to help you find 
-            someone who doesn't just look right—but shares what you love.
-          </p>
+      <Section eyebrow="What we offer" title="Built around the way you connect">
+        <div className="pub-grid">
+          {FEATURES.map((f) => (
+            <article key={f.title} className="pub-card">
+              <span className="pub-icon"><Icon name={f.icon} size={22} /></span>
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+            </article>
+          ))}
         </div>
-      </section>
+      </Section>
 
-      {/* Services Grid */}
-      <section className="services-section">
-        <div className="container">
-          <h2>What We Offer</h2>
-          <div className="services-grid">
-            {services.map((service, index) => (
-              <div key={index} className="service-card">
-                <div className="service-icon">{service.icon}</div>
-                <h3>{service.title}</h3>
-                <p>{service.description}</p>
+      <Section alt eyebrow="How it works" title="From sign-up to first date">
+        <ol className="svc-steps">
+          {STEPS.map((s) => (
+            <li key={s.n} className="svc-step">
+              <span className="svc-step-n">{s.n}</span>
+              <div>
+                <h3>{s.title}</h3>
+                <p>{s.text}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </li>
+          ))}
+        </ol>
+      </Section>
 
-      {/* How It Works */}
-      <section className="how-it-works">
-        <div className="container">
-          <h2>How It Works</h2>
-          <div className="steps-container">
-            {steps.map((step, index) => (
-              <div key={index} className="step">
-                <div className="step-number">{step.number}</div>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
-                {index < steps.length - 1 && <div className="step-arrow">→</div>}
-              </div>
-            ))}
-          </div>
+      <Section eyebrow="Safety" title="Your safety comes first">
+        <div className="pub-grid">
+          {SAFETY.map((s) => (
+            <article key={s.title} className="pub-card">
+              <span className="pub-icon"><Icon name={s.icon} size={22} /></span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </article>
+          ))}
         </div>
-      </section>
+      </Section>
 
-      {/* Safety & Trust Section */}
-      <section className="safety-section">
-        <div className="container">
-          <h2>Your Safety is Our Priority</h2>
-          <div className="safety-features">
-            <div className="safety-item">
-              <h3>✔️ Verified Profiles</h3>
-              <p>All users go through email verification to ensure authenticity.</p>
-            </div>
-            <div className="safety-item">
-              <h3>🔐 Data Privacy</h3>
-              <p>Your information is encrypted and never shared with third parties.</p>
-            </div>
-            <div className="safety-item">
-              <h3>⚠️ Report & Block</h3>
-              <p>Flag inappropriate behavior and block users instantly.</p>
-            </div>
-            <div className="safety-item">
-              <h3>💬 Safe Messaging</h3>
-              <p>Chat with peace of mind on our secure platform.</p>
-            </div>
-          </div>
+      <section className="pub-cta-band">
+        <h2>Ready to find your perfect match?</h2>
+        <p>Create a free profile in a few minutes.</p>
+        <div className="hero-actions">
+          <Link to="/signup" className="btn btn-light btn-lg">Sign up free</Link>
+          <Link to="/why-us" className="btn btn-ghost btn-lg">Why Cherish</Link>
         </div>
       </section>
-
-      {/* Success Metrics */}
-      <section className="metrics-section">
-        <div className="container">
-          <h2>By The Numbers</h2>
-          <div className="metrics-grid">
-            <div className="metric">
-              <div className="metric-number">50K+</div>
-              <div className="metric-label">Active Users</div>
-            </div>
-            <div className="metric">
-              <div className="metric-number">100+</div>
-              <div className="metric-label">Hobbies Categories</div>
-            </div>
-            <div className="metric">
-              <div className="metric-number">10K+</div>
-              <div className="metric-label">Successful Connections</div>
-            </div>
-            <div className="metric">
-              <div className="metric-number">15</div>
-              <div className="metric-label">Indian Cities</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="container">
-          <h2>Ready to Find Your Perfect Match?</h2>
-          <p>Join thousands of people discovering love through shared passions.</p>
-          <div className="cta-buttons">
-            <button className="btn btn-primary">Sign Up Free</button>
-            <button className="btn btn-secondary">Learn More About Us</button>
-          </div>
-        </div>
-      </section>
-    </div>
+    </PublicLayout>
   );
 }
 
