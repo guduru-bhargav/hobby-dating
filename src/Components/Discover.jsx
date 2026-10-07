@@ -2,53 +2,56 @@ import React, { useCallback, useEffect, useState } from "react";
 import Icon from "./Icon";
 import FiltersSheet from "./FiltersSheet";
 import { EMPTY_FILTERS, countActiveFilters } from "../lib/filters";
-import { fetchDeck, fetchSwipedIds, hasLikedMe, recordSwipe } from "../api/discover";
+import { fetchLikedIds, fetchProfiles, hasLikedMe, likeProfile, unlikeProfile } from "../api/discover";
 import { calculateAge, errorMessage, parseHobbies, photoOf } from "../lib/utils";
 import { DATING_INTENTS } from "../lib/constants";
 import "./Discover.css";
 
 const intentLabel = (value) => DATING_INTENTS.find((d) => d.value === value)?.label;
 
-function DiscoverCard({ profile, showSecond, onToggleSecond, onOpenProfile }) {
+// A suggestion card, Instagram-suggested-accounts style: photo, name, a couple of hobbies,
+// a heart that toggles (it never disappears from the feed), and a direct way to message.
+function SuggestionCard({ profile, liked, busy, onToggleLike, onMessage, onOpenProfile }) {
   const age = calculateAge(profile.date_of_birth);
   const hobbies = parseHobbies(profile.hobbies);
+  const name = profile.first_name || "Member";
 
   return (
-    <article className="deck-card">
-      <button type="button" className="deck-photo" onClick={onToggleSecond}
-        aria-label="Tap to see the other photo">
-        <img src={showSecond ? photoOf(profile, 2) : photoOf(profile, 1)} alt={profile.first_name} />
-        {profile.photo_2 && (
-          <span className="deck-dots" aria-hidden="true">
-            <i className={!showSecond ? "on" : ""} />
-            <i className={showSecond ? "on" : ""} />
-          </span>
+    <article className="feed-card">
+      <div className="feed-photo-wrap">
+        <button type="button" className="feed-photo" onClick={onOpenProfile}
+          aria-label={`View ${name}'s profile`}>
+          <img src={photoOf(profile, 1)} alt={name} />
+        </button>
+        <button type="button" className={`feed-like ${liked ? "liked" : ""}`}
+          onClick={onToggleLike} disabled={busy}
+          aria-label={liked ? `Unlike ${name}` : `Like ${name}`} aria-pressed={liked}>
+          <Icon name="heart" size={16} strokeWidth={liked ? 0 : 2.2} />
+        </button>
+      </div>
+
+      <button type="button" className="feed-body" onClick={onOpenProfile}
+        aria-label={`View ${name}'s profile`}>
+        <h3>{name}{age !== null ? `, ${age}` : ""}</h3>
+        {profile.location_city && <p>{profile.location_city}</p>}
+        {hobbies.length > 0 && (
+          <div className="chip-row">
+            {hobbies.slice(0, 3).map((h) => <span key={h} className="chip">{h}</span>)}
+          </div>
         )}
       </button>
 
-      {/* Tapping the info panel opens the full profile, same as tapping into a profile on Instagram */}
-      <button type="button" className="deck-info" onClick={onOpenProfile}
-        aria-label={`View ${profile.first_name}'s profile`}>
-        <div className="deck-title">
-          <h2>{profile.first_name}{age !== null ? `, ${age}` : ""}</h2>
-          {profile.location_city && <p>{profile.location_city}</p>}
-        </div>
-        {profile.dating_intent && <span className="pill">{intentLabel(profile.dating_intent)}</span>}
-        {hobbies.length > 0 && (
-          <div className="chip-row">
-            {hobbies.slice(0, 5).map((h) => <span key={h} className="chip">{h}</span>)}
-          </div>
-        )}
-        <span className="deck-view-hint"><Icon name="arrowRight" size={14} /> View profile</span>
+      <button type="button" className="btn btn-ghost btn-sm feed-message" onClick={onMessage}>
+        <Icon name="chat" size={15} /> Message
       </button>
     </article>
   );
 }
 
 // Full profile view. Used by Discover (tap a card) and by the chat (tap the header),
-// so someone you've already swiped past or matched with can still be looked up again.
+// so someone you've already liked or messaged can still be looked up again.
 // `onMessage` is optional: omit it to show a read-only profile with no action button.
-export function ProfileDetail({ profile, onMessage, onClose }) {
+export function ProfileDetail({ profile, liked, onToggleLike, onMessage, onClose }) {
   const [showSecond, setShowSecond] = useState(false);
   const age = calculateAge(profile.date_of_birth);
   const hobbies = parseHobbies(profile.hobbies);
@@ -80,18 +83,26 @@ export function ProfileDetail({ profile, onMessage, onClose }) {
               {hobbies.map((h) => <span key={h} className="chip">{h}</span>)}
             </div>
           )}
-          {onMessage && (
-            <button type="button" className="btn btn-primary btn-block" onClick={onMessage}>
-              <Icon name="chat" size={18} /> Message {profile.first_name}
-            </button>
-          )}
+          <div className="detail-actions">
+            {onMessage && (
+              <button type="button" className="btn btn-primary btn-block" onClick={onMessage}>
+                <Icon name="chat" size={18} /> Message {profile.first_name}
+              </button>
+            )}
+            {onToggleLike && (
+              <button type="button" className={`btn btn-block ${liked ? "btn-primary" : "btn-ghost"}`}
+                onClick={onToggleLike}>
+                <Icon name="heart" size={18} strokeWidth={liked ? 0 : 2} /> {liked ? "Liked" : "Like"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function MatchModal({ profile, onMessage, onKeepSwiping }) {
+function MatchModal({ profile, onMessage, onKeepBrowsing }) {
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="It's a match">
       <div className="match-modal">
@@ -102,8 +113,8 @@ function MatchModal({ profile, onMessage, onKeepSwiping }) {
           <button type="button" className="btn btn-primary" onClick={onMessage}>
             <Icon name="chat" size={18} /> Send a message
           </button>
-          <button type="button" className="btn btn-ghost" onClick={onKeepSwiping}>
-            Keep swiping
+          <button type="button" className="btn btn-ghost" onClick={onKeepBrowsing}>
+            Keep browsing
           </button>
         </div>
       </div>
@@ -113,22 +124,26 @@ function MatchModal({ profile, onMessage, onKeepSwiping }) {
 
 // `profile` is the viewer's own profile row; its user_id is the auth id
 function Discover({ profile: me, onMessage }) {
-  const [deck, setDeck] = useState([]);
+  const [profiles, setProfiles] = useState([]);
+  const [likedIds, setLikedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
-  const [showSecond, setShowSecond] = useState(false);
   const [match, setMatch] = useState(null);
   const [viewing, setViewing] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState(null);
 
-  const loadDeck = useCallback(async () => {
+  const loadFeed = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const swiped = await fetchSwipedIds(me.user_id);
-      setDeck(await fetchDeck(me, filters, swiped));
+      const [list, liked] = await Promise.all([
+        fetchProfiles(me, filters),
+        fetchLikedIds(me.user_id),
+      ]);
+      setProfiles(list);
+      setLikedIds(liked);
     } catch (err) {
       setError(errorMessage(err, "Couldn't load profiles."));
     } finally {
@@ -137,42 +152,35 @@ function Discover({ profile: me, onMessage }) {
   }, [me, filters]);
 
   useEffect(() => {
-    loadDeck();
-  }, [loadDeck]);
+    loadFeed();
+  }, [loadFeed]);
 
-  const current = deck[0];
-
-  const swipe = async (action) => {
-    if (!current || busy) return;
-    setBusy(true);
-    setShowSecond(false);
-    const target = current;
+  const toggleLike = async (profile) => {
+    if (busyId) return;
+    setBusyId(profile.user_id);
+    const alreadyLiked = likedIds.has(profile.user_id);
 
     try {
-      await recordSwipe(me.user_id, target.user_id, action);
-      setDeck((d) => d.slice(1));
-      if (action === "like" && (await hasLikedMe(me.user_id, target.user_id))) {
-        setMatch(target);
+      if (alreadyLiked) {
+        await unlikeProfile(me.user_id, profile.user_id);
+        setLikedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(profile.user_id);
+          return next;
+        });
+      } else {
+        await likeProfile(me.user_id, profile.user_id);
+        setLikedIds((prev) => new Set(prev).add(profile.user_id));
+        if (await hasLikedMe(me.user_id, profile.user_id)) {
+          setMatch(profile);
+        }
       }
     } catch (err) {
       setError(errorMessage(err, "Couldn't save that. Try again."));
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   };
-
-  // Keyboard shortcuts: ← pass, → like
-  useEffect(() => {
-    const onKey = (e) => {
-      if (match || showFilters || viewing || e.target.matches("input, textarea, select")) return;
-      if (e.key === "ArrowLeft") swipe("pass");
-      if (e.key === "ArrowRight") swipe("like");
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // swipe depends on the current card; re-bind when it changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.user_id, match, showFilters, viewing, busy]);
 
   const activeCount = countActiveFilters(filters);
 
@@ -181,10 +189,10 @@ function Discover({ profile: me, onMessage }) {
       <header className="view-head">
         <div>
           <p className="eyebrow">Discover</p>
-          <h1>People near your interests</h1>
+          <h1>Profile suggestions</h1>
         </div>
         <div className="view-head-actions">
-          <button type="button" className="icon-btn" onClick={loadDeck} disabled={loading}
+          <button type="button" className="icon-btn" onClick={loadFeed} disabled={loading}
             aria-label="Refresh profiles">
             <Icon name="refresh" size={18} className={loading ? "spin" : ""} />
           </button>
@@ -199,48 +207,40 @@ function Discover({ profile: me, onMessage }) {
 
       {loading && <div className="deck-state"><div className="spinner" /><p>Finding people…</p></div>}
 
-      {!loading && !current && !error && (
+      {!loading && profiles.length === 0 && !error && (
         <div className="deck-state empty">
           <div className="empty-icon"><Icon name="sparkle" size={28} /></div>
-          <h3>You're all caught up</h3>
-          <p>Try widening your filters or check back later for new members.</p>
+          <h3>No one here yet</h3>
+          <p>
+            {activeCount > 0
+              ? "Nobody matches these filters. Try widening them."
+              : "Check back soon, or tap refresh to look again."}
+          </p>
           <div className="deck-state-actions">
             {activeCount > 0 && (
               <button type="button" className="btn btn-ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
                 Clear filters
               </button>
             )}
-            <button type="button" className="btn btn-primary" onClick={loadDeck}>Refresh</button>
+            <button type="button" className="btn btn-primary" onClick={loadFeed}>Refresh</button>
           </div>
         </div>
       )}
 
-      {!loading && current && (
-        <>
-          <DiscoverCard
-            key={current.user_id}
-            profile={current}
-            showSecond={showSecond}
-            onToggleSecond={() => setShowSecond((s) => !s)}
-            onOpenProfile={() => setViewing(current)}
-          />
-
-          <div className="deck-actions" aria-label="Actions">
-            <button type="button" className="action action-pass" onClick={() => swipe("pass")}
-              disabled={busy} aria-label="Pass">
-              <Icon name="x" size={26} strokeWidth={2.5} />
-            </button>
-            <button type="button" className="action action-chat" onClick={() => onMessage(current)}
-              disabled={busy} aria-label={`Message ${current.first_name}`}>
-              <Icon name="chat" size={22} />
-            </button>
-            <button type="button" className="action action-like" onClick={() => swipe("like")}
-              disabled={busy} aria-label="Like">
-              <Icon name="heart" size={26} strokeWidth={2} />
-            </button>
-          </div>
-          <p className="deck-hint">Use ← and → keys on desktop</p>
-        </>
+      {!loading && profiles.length > 0 && (
+        <div className="feed-grid">
+          {profiles.map((p) => (
+            <SuggestionCard
+              key={p.user_id}
+              profile={p}
+              liked={likedIds.has(p.user_id)}
+              busy={busyId === p.user_id}
+              onToggleLike={() => toggleLike(p)}
+              onMessage={() => onMessage(p)}
+              onOpenProfile={() => setViewing(p)}
+            />
+          ))}
+        </div>
       )}
 
       {showFilters && (
@@ -260,13 +260,15 @@ function Discover({ profile: me, onMessage }) {
             setMatch(null);
             onMessage(target);
           }}
-          onKeepSwiping={() => setMatch(null)}
+          onKeepBrowsing={() => setMatch(null)}
         />
       )}
 
       {viewing && (
         <ProfileDetail
           profile={viewing}
+          liked={likedIds.has(viewing.user_id)}
+          onToggleLike={() => toggleLike(viewing)}
           onClose={() => setViewing(null)}
           onMessage={() => {
             const target = viewing;

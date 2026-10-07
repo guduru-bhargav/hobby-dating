@@ -1,40 +1,114 @@
 /* ==========================================================================
-   Discover: card deck, actions, filter sheet, match modal
+   Discover: suggestion feed, filter sheet, match modal, profile detail
    ========================================================================== */
 .discover {
   width: 100%;
-  max-width: 460px;
+  max-width: 1040px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.deck-card {
-  position: relative;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--surface);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
 }
 
-.deck-photo {
+.feed-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.feed-photo-wrap {
   position: relative;
+  aspect-ratio: 4 / 5;
+}
+
+.feed-photo {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  max-height: 62vh;
+  height: 100%;
   padding: 0;
   border: 0;
   background: #000;
   overflow: hidden;
 }
 
-.deck-photo img {
+.feed-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.feed-like {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(10, 10, 14, 0.5);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.feed-like:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.feed-like.liked {
+  background: var(--brand-gradient);
+}
+
+.feed-body {
+  display: block;
+  width: 100%;
+  padding: 12px 14px 2px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.feed-body h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-body p {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.feed-body .chip-row {
+  margin-top: 8px;
+  gap: 6px;
+}
+
+.feed-body .chip {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+}
+
+.feed-message {
+  margin: 10px 14px 14px;
+  justify-content: center;
 }
 
 .deck-dots {
@@ -55,126 +129,6 @@
 
 .deck-dots i.on {
   background: #fff;
-}
-
-.deck-info {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  padding: 80px 20px 18px;
-  border: 0;
-  color: #fff;
-  background: linear-gradient(to top, rgba(10, 10, 14, 0.85), rgba(10, 10, 14, 0));
-  display: grid;
-  gap: 10px;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.deck-info:hover {
-  background: linear-gradient(to top, rgba(10, 10, 14, 0.92), rgba(10, 10, 14, 0.05));
-}
-
-.deck-view-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  opacity: 0.85;
-}
-
-.deck-title {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.deck-title h2 {
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-
-.deck-title p {
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-.deck-info .chip-row {
-  gap: 6px;
-}
-
-.deck-info .chip {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: transparent;
-  color: #fff;
-  backdrop-filter: blur(4px);
-}
-
-.pill {
-  justify-self: start;
-  display: inline-flex;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--brand);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.deck-info .pill {
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.deck-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 22px;
-}
-
-.action {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  transition: transform 0.15s ease;
-}
-
-.action:hover:not(:disabled) {
-  transform: scale(1.06);
-}
-
-.action-pass {
-  color: #f59e0b;
-}
-
-.action-like {
-  width: 76px;
-  height: 76px;
-  border: 0;
-  background: var(--brand-gradient);
-  color: #fff;
-}
-
-.action-chat {
-  width: 54px;
-  height: 54px;
-  color: var(--ink-2);
-}
-
-.deck-hint {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--muted);
 }
 
 /* Empty / loading */
@@ -330,7 +284,9 @@
   justify-self: start;
 }
 
-.detail-body .btn-block {
+.detail-actions {
+  display: grid;
+  gap: 10px;
   margin-top: 6px;
 }
 
