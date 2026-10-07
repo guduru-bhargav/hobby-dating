@@ -183,10 +183,16 @@ function Discover({ profile: me, onMessage }) {
           <p className="eyebrow">Discover</p>
           <h1>People near your interests</h1>
         </div>
-        <button type="button" className="btn btn-ghost filter-btn" onClick={() => setShowFilters(true)}>
-          <Icon name="filter" size={16} /> Filters
-          {activeCount > 0 && <span className="count-badge">{activeCount}</span>}
-        </button>
+        <div className="view-head-actions">
+          <button type="button" className="icon-btn" onClick={loadDeck} disabled={loading}
+            aria-label="Refresh profiles">
+            <Icon name="refresh" size={18} className={loading ? "spin" : ""} />
+          </button>
+          <button type="button" className="btn btn-ghost filter-btn" onClick={() => setShowFilters(true)}>
+            <Icon name="filter" size={16} /> Filters
+            {activeCount > 0 && <span className="count-badge">{activeCount}</span>}
+          </button>
+        </div>
       </header>
 
       {error && <div className="form-error" role="alert">{error}</div>}

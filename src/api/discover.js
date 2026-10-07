@@ -14,8 +14,9 @@ export const fetchSwipedIds = async (meId) => {
   return new Set((data || []).map((r) => r.to_user));
 };
 
-// Builds the card deck: people who match the viewer's preference, who also want the viewer,
-// narrowed by the filter sheet, minus anyone already swiped on. `myProfile` is the viewer's profile row.
+// Builds the card deck: everyone in profiles, minus the viewer and anyone already swiped on,
+// narrowed only by whatever the person turns on in the filter sheet. `myProfile` is the viewer's
+// own profile row (used only to exclude it, not to auto-narrow by gender preference).
 export const fetchDeck = async (myProfile, filters, swipedIds) => {
   let query = supabase
     .from("profiles")
@@ -23,13 +24,6 @@ export const fetchDeck = async (myProfile, filters, swipedIds) => {
     .neq("user_id", myProfile.user_id)
     .order("created_at", { ascending: false })
     .limit(DECK_SIZE + swipedIds.size);
-
-  if (myProfile.gender_preference && myProfile.gender_preference !== "everyone") {
-    query = query.eq("gender", myProfile.gender_preference);
-  }
-  if (myProfile.gender) {
-    query = query.or(`gender_preference.eq.everyone,gender_preference.eq.${myProfile.gender}`);
-  }
 
   if (filters.gender.length) query = query.in("gender", filters.gender);
   if (filters.city.length) query = query.in("location_city", filters.city);
