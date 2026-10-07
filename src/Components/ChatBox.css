@@ -17,6 +17,30 @@
   border-bottom: 1px solid var(--line);
 }
 
+.chat-head-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+}
+
+.chat-head-id:hover {
+  background: var(--bg);
+}
+
+.chat-head-chevron {
+  margin-left: auto;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
 .chat-head-text h3 {
   font-size: 1rem;
   font-weight: 700;

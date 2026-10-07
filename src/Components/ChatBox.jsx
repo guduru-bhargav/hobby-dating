@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
+import { ProfileDetail } from "./Discover";
 import {
   fetchMessages,
   getOrCreateConversation,
@@ -17,6 +18,7 @@ function ChatBox({ meId, profile, onBack }) {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [viewingProfile, setViewingProfile] = useState(false);
   const listRef = useRef(null);
 
   // Open (or create) the conversation for this pair and load its history
@@ -143,12 +145,21 @@ function ChatBox({ meId, profile, onBack }) {
             <Icon name="back" size={20} />
           </button>
         )}
-        <img className="chat-avatar" src={photoOf(profile, 1)} alt="" />
-        <div className="chat-head-text">
-          <h3>{name}</h3>
-          {profile.location_city && <p>{profile.location_city}</p>}
-        </div>
+        {/* Tap the person's name/photo to see their full profile again, any time */}
+        <button type="button" className="chat-head-id" onClick={() => setViewingProfile(true)}
+          aria-label={`View ${name}'s profile`}>
+          <img className="chat-avatar" src={photoOf(profile, 1)} alt="" />
+          <div className="chat-head-text">
+            <h3>{name}</h3>
+            {profile.location_city && <p>{profile.location_city}</p>}
+          </div>
+          <Icon name="arrowRight" size={16} className="chat-head-chevron" />
+        </button>
       </header>
+
+      {viewingProfile && (
+        <ProfileDetail profile={profile} onClose={() => setViewingProfile(false)} />
+      )}
 
       <div className="chat-messages" ref={listRef}>
         {loading && <div className="chat-state"><div className="spinner" /></div>}

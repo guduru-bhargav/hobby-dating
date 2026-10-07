@@ -9,7 +9,7 @@ import "./Discover.css";
 
 const intentLabel = (value) => DATING_INTENTS.find((d) => d.value === value)?.label;
 
-function DiscoverCard({ profile, showSecond, onToggleSecond }) {
+function DiscoverCard({ profile, showSecond, onToggleSecond, onOpenProfile }) {
   const age = calculateAge(profile.date_of_birth);
   const hobbies = parseHobbies(profile.hobbies);
 
@@ -26,7 +26,9 @@ function DiscoverCard({ profile, showSecond, onToggleSecond }) {
         )}
       </button>
 
-      <div className="deck-info">
+      {/* Tapping the info panel opens the full profile, same as tapping into a profile on Instagram */}
+      <button type="button" className="deck-info" onClick={onOpenProfile}
+        aria-label={`View ${profile.first_name}'s profile`}>
         <div className="deck-title">
           <h2>{profile.first_name}{age !== null ? `, ${age}` : ""}</h2>
           {profile.location_city && <p>{profile.location_city}</p>}
@@ -37,8 +39,55 @@ function DiscoverCard({ profile, showSecond, onToggleSecond }) {
             {hobbies.slice(0, 5).map((h) => <span key={h} className="chip">{h}</span>)}
           </div>
         )}
-      </div>
+        <span className="deck-view-hint"><Icon name="arrowRight" size={14} /> View profile</span>
+      </button>
     </article>
+  );
+}
+
+// Full profile view. Used by Discover (tap a card) and by the chat (tap the header),
+// so someone you've already swiped past or matched with can still be looked up again.
+// `onMessage` is optional: omit it to show a read-only profile with no action button.
+export function ProfileDetail({ profile, onMessage, onClose }) {
+  const [showSecond, setShowSecond] = useState(false);
+  const age = calculateAge(profile.date_of_birth);
+  const hobbies = parseHobbies(profile.hobbies);
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${profile.first_name}'s profile`}>
+      <div className="detail-sheet" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="icon-btn detail-close" onClick={onClose} aria-label="Close">
+          <Icon name="x" size={18} />
+        </button>
+
+        <button type="button" className="detail-photo" onClick={() => setShowSecond((s) => !s)}
+          aria-label="Tap to see the other photo">
+          <img src={showSecond ? photoOf(profile, 2) : photoOf(profile, 1)} alt={profile.first_name} />
+          {profile.photo_2 && (
+            <span className="deck-dots" aria-hidden="true">
+              <i className={!showSecond ? "on" : ""} />
+              <i className={showSecond ? "on" : ""} />
+            </span>
+          )}
+        </button>
+
+        <div className="detail-body">
+          <h2>{profile.first_name}{age !== null ? `, ${age}` : ""}</h2>
+          {profile.location_city && <p className="pp-meta">{profile.location_city}</p>}
+          {profile.dating_intent && <span className="pill-soft">{intentLabel(profile.dating_intent)}</span>}
+          {hobbies.length > 0 && (
+            <div className="chip-row">
+              {hobbies.map((h) => <span key={h} className="chip">{h}</span>)}
+            </div>
+          )}
+          {onMessage && (
+            <button type="button" className="btn btn-primary btn-block" onClick={onMessage}>
+              <Icon name="chat" size={18} /> Message {profile.first_name}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -71,6 +120,7 @@ function Discover({ profile: me, onMessage }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showSecond, setShowSecond] = useState(false);
   const [match, setMatch] = useState(null);
+  const [viewing, setViewing] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const loadDeck = useCallback(async () => {
@@ -114,7 +164,7 @@ function Discover({ profile: me, onMessage }) {
   // Keyboard shortcuts: ← pass, → like
   useEffect(() => {
     const onKey = (e) => {
-      if (match || showFilters || e.target.matches("input, textarea, select")) return;
+      if (match || showFilters || viewing || e.target.matches("input, textarea, select")) return;
       if (e.key === "ArrowLeft") swipe("pass");
       if (e.key === "ArrowRight") swipe("like");
     };
@@ -122,7 +172,7 @@ function Discover({ profile: me, onMessage }) {
     return () => window.removeEventListener("keydown", onKey);
     // swipe depends on the current card; re-bind when it changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.user_id, match, showFilters, busy]);
+  }, [current?.user_id, match, showFilters, viewing, busy]);
 
   const activeCount = countActiveFilters(filters);
 
@@ -166,6 +216,7 @@ function Discover({ profile: me, onMessage }) {
             profile={current}
             showSecond={showSecond}
             onToggleSecond={() => setShowSecond((s) => !s)}
+            onOpenProfile={() => setViewing(current)}
           />
 
           <div className="deck-actions" aria-label="Actions">
@@ -204,6 +255,18 @@ function Discover({ profile: me, onMessage }) {
             onMessage(target);
           }}
           onKeepSwiping={() => setMatch(null)}
+        />
+      )}
+
+      {viewing && (
+        <ProfileDetail
+          profile={viewing}
+          onClose={() => setViewing(null)}
+          onMessage={() => {
+            const target = viewing;
+            setViewing(null);
+            onMessage(target);
+          }}
         />
       )}
     </section>
