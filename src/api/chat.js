@@ -81,11 +81,14 @@ export const sendMessage = async (conversationId, senderId, text) => {
     .single();
   if (error) throw error;
 
-  // Keep the inbox preview in sync. Failure here shouldn't hide a message that was sent.
-  await supabase
+  // Keep the inbox preview in sync. Failure here shouldn't hide a message that was sent —
+  // but it's logged, since a silent failure here is exactly what makes the inbox look stuck
+  // on "Say hi" even though messages exist.
+  const { error: previewError } = await supabase
     .from("conversations")
     .update({ last_message: text, last_message_at: data.created_at })
     .eq("id", conversationId);
+  if (previewError) console.warn("Couldn't update conversation preview:", previewError);
 
   return data;
 };

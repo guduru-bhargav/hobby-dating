@@ -48,18 +48,18 @@
   gap: 2px;
 }
 
+.inbox-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .inbox-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
-}
-
-.inbox-row strong {
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .inbox-row time {
@@ -69,6 +69,8 @@
 }
 
 .inbox-preview {
+  flex: 1;
+  min-width: 0;
   font-size: 0.88rem;
   color: var(--muted);
   overflow: hidden;

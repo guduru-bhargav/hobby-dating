@@ -63,12 +63,12 @@ function ChatList({ meId, selectedId, onSelect }) {
           >
             <img className="inbox-avatar" src={photoOf(chat.profile, 1)} alt="" />
             <span className="inbox-text">
+              <strong className="inbox-name">{name}</strong>
               <span className="inbox-row">
-                <strong>{name}</strong>
+                <span className="inbox-preview">
+                  {chat.last_message || "Say hi 👋"}
+                </span>
                 <time>{timeAgo(chat.last_message_at || chat.created_at)}</time>
-              </span>
-              <span className="inbox-preview">
-                {chat.last_message || "Say hi 👋"}
               </span>
             </span>
           </button>
