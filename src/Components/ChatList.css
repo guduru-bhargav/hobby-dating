@@ -29,8 +29,23 @@
   background: var(--brand-soft);
 }
 
+.inbox-item.unread {
+  background: var(--brand-soft);
+}
+
+.inbox-item.unread .inbox-name,
+.inbox-item.unread .inbox-preview {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .inbox-item:disabled {
   opacity: 0.6;
+}
+
+.inbox-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .inbox-avatar {
@@ -39,6 +54,17 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 2px solid var(--surface);
 }
 
 .inbox-text {

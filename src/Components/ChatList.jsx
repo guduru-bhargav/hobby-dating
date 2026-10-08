@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Icon from "./Icon";
-import { listConversations } from "../api/chat";
+import { fetchUnreadConversationIds, listConversations } from "../api/chat";
 import { supabase } from "../lib/supabase";
 import { errorMessage, photoOf, timeAgo } from "../lib/utils";
 import "./ChatList.css";
@@ -8,12 +8,18 @@ import "./ChatList.css";
 // Inbox: every conversation the viewer is part of, newest first
 function ChatList({ meId, selectedId, onSelect }) {
   const [chats, setChats] = useState([]);
+  const [unreadIds, setUnreadIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
-      setChats(await listConversations(meId));
+      const [list, unread] = await Promise.all([
+        listConversations(meId),
+        fetchUnreadConversationIds(meId),
+      ]);
+      setChats(list);
+      setUnreadIds(unread);
       setError("");
     } catch (err) {
       setError(errorMessage(err, "Couldn't load your messages."));
@@ -25,10 +31,16 @@ function ChatList({ meId, selectedId, onSelect }) {
   useEffect(() => {
     load();
 
-    // Refresh the inbox whenever any conversation changes (RLS limits rows to the viewer)
+    // Refresh the inbox whenever a conversation or one of this viewer's notifications changes
+    // (RLS limits both to rows the viewer is actually part of)
     const channel = supabase
       .channel(`inbox_${meId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, load)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` },
+        load
+      )
       .subscribe();
 
     return () => {
@@ -53,15 +65,19 @@ function ChatList({ meId, selectedId, onSelect }) {
       {chats.map((chat) => {
         const name = chat.profile?.first_name || "Former member";
         const active = chat.profile && chat.profile.user_id === selectedId;
+        const unread = unreadIds.has(chat.id);
         return (
           <button
             key={chat.id}
             type="button"
-            className={`inbox-item ${active ? "active" : ""}`}
+            className={`inbox-item ${active ? "active" : ""} ${unread ? "unread" : ""}`}
             onClick={() => chat.profile && onSelect(chat.profile)}
             disabled={!chat.profile}
           >
-            <img className="inbox-avatar" src={photoOf(chat.profile, 1)} alt="" />
+            <span className="inbox-avatar-wrap">
+              <img className="inbox-avatar" src={photoOf(chat.profile, 1)} alt="" />
+              {unread && <span className="unread-dot" aria-hidden="true" />}
+            </span>
             <span className="inbox-text">
               <strong className="inbox-name">{name}</strong>
               <span className="inbox-row">
@@ -71,6 +87,7 @@ function ChatList({ meId, selectedId, onSelect }) {
                 <time>{timeAgo(chat.last_message_at || chat.created_at)}</time>
               </span>
             </span>
+            {unread && <span className="sr-only">Unread</span>}
           </button>
         );
       })}

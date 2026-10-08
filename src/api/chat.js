@@ -93,13 +93,25 @@ export const sendMessage = async (conversationId, senderId, text) => {
   return data;
 };
 
+// Conversations with at least one unread notification for this viewer
+export const fetchUnreadConversationIds = async (userId) => {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("conversation_id")
+    .eq("user_id", userId)
+    .eq("is_read", false);
+  if (error) throw error;
+  return new Set((data || []).map((n) => n.conversation_id).filter(Boolean));
+};
+
 export const markNotificationsRead = async (userId, conversationId) => {
-  await supabase
+  const { error } = await supabase
     .from("notifications")
     .update({ is_read: true })
     .eq("user_id", userId)
     .eq("conversation_id", conversationId)
     .eq("is_read", false);
+  if (error) console.warn("Couldn't mark notifications read:", error);
 };
 
 export const countUnreadNotifications = async (userId) => {

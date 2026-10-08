@@ -12,7 +12,9 @@ import { clockTime, errorMessage, photoOf } from "../lib/utils";
 import "./ChatBox.css";
 
 // One-to-one chat with `profile` (the other person). `meId` is the viewer's auth id.
-function ChatBox({ meId, profile, onBack }) {
+// `onRead` (optional) is called right after notifications for this conversation are marked
+// read, so a parent badge count can refresh immediately instead of waiting on realtime.
+function ChatBox({ meId, profile, onBack, onRead }) {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
@@ -37,7 +39,8 @@ function ChatBox({ meId, profile, onBack }) {
         if (cancelled) return;
         setConversation(conv);
         setMessages(history);
-        markNotificationsRead(meId, conv.id);
+        await markNotificationsRead(meId, conv.id);
+        onRead?.();
       } catch (err) {
         if (!cancelled) setError(errorMessage(err, "Couldn't open this chat."));
       } finally {
@@ -48,7 +51,7 @@ function ChatBox({ meId, profile, onBack }) {
     return () => {
       cancelled = true;
     };
-  }, [meId, profile.user_id]);
+  }, [meId, profile.user_id, onRead]);
 
   // Live incoming messages for this conversation
   useEffect(() => {
@@ -67,7 +70,9 @@ function ChatBox({ meId, profile, onBack }) {
         (payload) => {
           const incoming = payload.new;
           setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
-          if (incoming.sender_id !== meId) markNotificationsRead(meId, conversation.id);
+          if (incoming.sender_id !== meId) {
+            markNotificationsRead(meId, conversation.id).then(() => onRead?.());
+          }
         }
       )
       .subscribe();
@@ -75,7 +80,7 @@ function ChatBox({ meId, profile, onBack }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversation?.id, meId]);
+  }, [conversation?.id, meId, onRead]);
 
   // Keep the latest message in view
   useEffect(() => {

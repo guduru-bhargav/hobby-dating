@@ -146,6 +146,7 @@ function MainPage() {
               meId={me.id}
               profile={chatTarget}
               onBack={() => setChatTarget(null)}
+              onRead={refreshUnread}
             />
           ) : (
             <div className="chat-placeholder">
