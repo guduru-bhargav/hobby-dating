@@ -8,13 +8,14 @@ import {
   GENDERS,
   GENDER_PREFERENCES,
   HOBBIES,
+  MAX_PHOTOS,
   MIN_AGE,
   MIN_PHOTOS,
 } from "../lib/constants";
-import { calculateAge, errorMessage, joinHobbies, uploadPhoto, validatePhoto } from "../lib/utils";
+import { calculateAge, errorMessage, joinHobbies, uploadPhoto } from "../lib/utils";
 import AuthLayout from "./AuthLayout";
 import Icon from "./Icon";
-import PhotoPicker from "./PhotoPicker";
+import MultiPhotoPicker from "./MultiPhotoPicker";
 import "./Auth.css";
 
 const EMPTY_FORM = {
@@ -25,16 +26,15 @@ const EMPTY_FORM = {
   gender: "",
   gender_preference: "",
   location_city: "",
+  pin_code: "",
   dating_intent: "",
   hobbies: [],
-  photo_1: null,
-  photo_2: null,
-  photo_3: null,
-  photo_4: null,
 };
 
+const PIN_RE = /^\d{6}$/;
+
 // Validate the whole form; returns the first problem as a message, or null
-const validateForm = (f) => {
+const validateForm = (f, photos) => {
   if (!f.first_name.trim()) return "Please enter your first name.";
   if (!f.email.trim()) return "Please enter your email.";
   if (f.password.length < 8) return "Password must be at least 8 characters.";
@@ -44,26 +44,18 @@ const validateForm = (f) => {
   if (!f.gender) return "Please select your gender.";
   if (!f.gender_preference) return "Please select who you're interested in.";
   if (!f.location_city) return "Please select your city.";
+  if (!PIN_RE.test(f.pin_code.trim())) return "Please enter a valid 6-digit PIN code.";
   if (!f.dating_intent) return "Please choose what you're looking for.";
   if (f.hobbies.length === 0) return "Pick at least one hobby.";
-  const p1 = validatePhoto(f.photo_1);
-  if (p1) return `Photo 1: ${p1}`;
-  const p2 = validatePhoto(f.photo_2);
-  if (p2) return `Photo 2: ${p2}`;
-  // Photos 3 and 4 are optional, but if one was picked it still has to be a valid image
-  for (const slot of [3, 4]) {
-    const file = f[`photo_${slot}`];
-    if (file) {
-      const problem = validatePhoto(file);
-      if (problem) return `Photo ${slot}: ${problem}`;
-    }
-  }
+  if (photos.length < MIN_PHOTOS) return `Add at least ${MIN_PHOTOS} photos.`;
   return null;
 };
 
 function Signup() {
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY_FORM);
+  const [photos, setPhotos] = useState([]); // [{ id, file, name }]
+  const [geo, setGeo] = useState({ status: "idle", lat: null, lng: null }); // idle|locating|done|denied|unsupported
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState("details"); // "details" | "verify"
   const [otp, setOtp] = useState("");
@@ -81,25 +73,43 @@ function Signup() {
         : [...prev.hobbies, hobby],
     }));
 
+  const addPhoto = (file) =>
+    setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, { id: crypto.randomUUID(), file, name: file.name }]));
+  const removePhoto = (id) => setPhotos((prev) => prev.filter((p) => p.id !== id));
+
+  // Best-effort location: never blocks signup if it's denied or unsupported
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setGeo({ status: "unsupported", lat: null, lng: null });
+      return;
+    }
+    setGeo((g) => ({ ...g, status: "locating" }));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setGeo({ status: "done", lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setGeo({ status: "denied", lat: null, lng: null }),
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  };
+
   // Upload photos and save the profile row. Needs an active session.
   const finishProfile = async (userId) => {
-    const photo_1 = await uploadPhoto(userId, form.photo_1, "photo_1");
-    const photo_2 = await uploadPhoto(userId, form.photo_2, "photo_2");
     const fields = {
       first_name: form.first_name.trim(),
       date_of_birth: form.date_of_birth,
       gender: form.gender,
       gender_preference: form.gender_preference,
       location_city: form.location_city,
+      pin_code: form.pin_code.trim(),
       dating_intent: form.dating_intent,
       hobbies: joinHobbies(form.hobbies),
-      photo_1,
-      photo_2,
     };
-
-    // Photos 3 and 4 are optional — only upload and save the ones actually picked
-    if (form.photo_3) fields.photo_3 = await uploadPhoto(userId, form.photo_3, "photo_3");
-    if (form.photo_4) fields.photo_4 = await uploadPhoto(userId, form.photo_4, "photo_4");
+    if (geo.status === "done") {
+      fields.latitude = geo.lat;
+      fields.longitude = geo.lng;
+    }
+    for (let i = 0; i < photos.length; i++) {
+      fields[`photo_${i + 1}`] = await uploadPhoto(userId, photos[i].file, `photo_${i + 1}`);
+    }
 
     await saveProfile(userId, fields);
 
@@ -110,7 +120,7 @@ function Signup() {
   const handleDetails = async (e) => {
     e.preventDefault();
     setError("");
-    const problem = validateForm(form);
+    const problem = validateForm(form, photos);
     if (problem) {
       setError(problem);
       return;
@@ -134,7 +144,7 @@ function Signup() {
       return;
     }
 
-    // Supabase returns no identities when the email is already taken
+    // Supabase returns no identities when the email is already taken by a confirmed account
     if (data.user && data.user.identities?.length === 0) {
       setBusy(false);
       setError("An account with this email already exists. Try logging in.");
@@ -158,7 +168,8 @@ function Signup() {
     setNotice(`We sent a 6-digit code to ${email}.`);
   };
 
-  // Step 2: confirm the email code, then finish the profile
+  // Step 2: confirm the email code — this is what proves the address is real and active,
+  // before any account can be used
   const handleVerify = async (e) => {
     e.preventDefault();
     setError("");
@@ -247,6 +258,14 @@ function Signup() {
     );
   }
 
+  const locationHint = {
+    idle: null,
+    locating: "Finding your location…",
+    done: "Location added ✓",
+    denied: "Couldn't get your location — that's fine, it's optional.",
+    unsupported: "Location isn't available on this device — that's fine, it's optional.",
+  }[geo.status];
+
   return (
     <AuthLayout
       wide
@@ -280,6 +299,9 @@ function Signup() {
             <input id="su-email" className="input" type="email" autoComplete="email"
               value={form.email} onChange={(e) => update("email", e.target.value)} />
           </div>
+          <p className="auth-hint">
+            We'll send a code here to confirm it's really you before your account is created.
+          </p>
         </div>
         <div className="field">
           <label htmlFor="su-password">Password <span style={{ fontWeight: 500, color: "var(--muted)" }}>(min. 8 characters)</span></label>
@@ -323,6 +345,12 @@ function Signup() {
             </select>
           </div>
           <div className="field">
+            <label htmlFor="su-pin">PIN code</label>
+            <input id="su-pin" className="input" inputMode="numeric" maxLength={6}
+              placeholder="e.g. 560001" value={form.pin_code}
+              onChange={(e) => update("pin_code", e.target.value.replace(/\D/g, "").slice(0, 6))} />
+          </div>
+          <div className="field">
             <label htmlFor="su-intent">Looking for</label>
             <select id="su-intent" className="input" value={form.dating_intent}
               onChange={(e) => update("dating_intent", e.target.value)}>
@@ -330,6 +358,19 @@ function Signup() {
               {DATING_INTENTS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
             </select>
           </div>
+        </div>
+
+        <div className="field">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={useMyLocation}
+            disabled={geo.status === "locating"}>
+            <Icon name="pin" size={15} /> {geo.status === "done" ? "Location added" : "Use my current location"}
+          </button>
+          {locationHint && (
+            <p className={`mphoto-hint ${geo.status === "done" ? "ok" : ""}`}>
+              {geo.status === "done" && <Icon name="check" size={14} strokeWidth={3} />}
+              {locationHint}
+            </p>
+          )}
         </div>
 
         <div className="field">
@@ -348,14 +389,13 @@ function Signup() {
         </div>
 
         <div className="auth-section-title">
-          Photos <span className="auth-section-hint">{MIN_PHOTOS} required, up to 4</span>
+          Photos <span className="auth-section-hint">{MIN_PHOTOS} required, up to {MAX_PHOTOS}</span>
         </div>
-        <div className="photo-grid">
-          <PhotoPicker label="Main photo (required)" file={form.photo_1} onChange={(f) => update("photo_1", f)} onError={setError} />
-          <PhotoPicker label="Second photo (required)" file={form.photo_2} onChange={(f) => update("photo_2", f)} onError={setError} />
-          <PhotoPicker label="Third photo (optional)" file={form.photo_3} onChange={(f) => update("photo_3", f)} onError={setError} />
-          <PhotoPicker label="Fourth photo (optional)" file={form.photo_4} onChange={(f) => update("photo_4", f)} onError={setError} />
-        </div>
+        <MultiPhotoPicker items={photos} onAdd={addPhoto} onRemove={removePhoto} onError={setError} max={MAX_PHOTOS} />
+        <p className="mphoto-hint">
+          {photos.length} of {MAX_PHOTOS} added
+          {photos.length < MIN_PHOTOS && ` — add ${MIN_PHOTOS - photos.length} more`}
+        </p>
 
         {error && <div className="form-error" role="alert">{error}</div>}
 

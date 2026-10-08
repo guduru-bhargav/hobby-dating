@@ -11,6 +11,7 @@ const COMPLETENESS = [
   (p) => !!p.date_of_birth,
   (p) => !!p.gender,
   (p) => !!p.location_city,
+  (p) => !!p.pin_code,
   (p) => !!p.dating_intent,
   (p) => parseHobbies(p.hobbies).length > 0,
   (p) => !!p.photo_1,
@@ -70,6 +71,8 @@ function ProfileMain({ me, profile, onProfileUpdated }) {
   const facts = [
     { label: "Gender", value: genderLabel },
     { label: "City", value: profile.location_city },
+    { label: "PIN code", value: profile.pin_code },
+    { label: "Location", value: profile.latitude != null ? "Added" : null },
     { label: "Looking for", value: intent },
     { label: "Member since", value: memberSince },
   ].filter((f) => f.value);

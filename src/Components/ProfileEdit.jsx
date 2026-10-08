@@ -6,19 +6,24 @@ import {
   GENDERS,
   GENDER_PREFERENCES,
   HOBBIES,
+  MAX_PHOTOS,
   MIN_AGE,
   MIN_PHOTOS,
 } from "../lib/constants";
 import {
   calculateAge,
+  displayPhotoName,
   errorMessage,
   joinHobbies,
   parseHobbies,
+  rawPhotos,
   uploadPhoto,
-  validatePhoto,
 } from "../lib/utils";
-import PhotoPicker from "./PhotoPicker";
+import Icon from "./Icon";
+import MultiPhotoPicker from "./MultiPhotoPicker";
 import "./ProfileEdit.css";
+
+const PIN_RE = /^\d{6}$/;
 
 const fromProfile = (p) => ({
   first_name: p?.first_name || "",
@@ -26,18 +31,21 @@ const fromProfile = (p) => ({
   gender: p?.gender || "",
   gender_preference: p?.gender_preference || "",
   location_city: p?.location_city || "",
+  pin_code: p?.pin_code || "",
   dating_intent: p?.dating_intent || "",
   // Keep hobbies that aren't in the preset list, so editing never silently drops them
   hobbies: parseHobbies(p?.hobbies),
 });
 
+// The profile's existing photos, as items the multi-photo picker can show and let you remove
+const photosFromProfile = (p) =>
+  rawPhotos(p).map((url) => ({ id: url, url, name: displayPhotoName(url) }));
+
 // Create or edit the viewer's profile. With `profile` null this is the first-time setup form.
 function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" }) {
   const [form, setForm] = useState(() => fromProfile(profile));
-  const [photo1, setPhoto1] = useState(null);
-  const [photo2, setPhoto2] = useState(null);
-  const [photo3, setPhoto3] = useState(null);
-  const [photo4, setPhoto4] = useState(null);
+  const [photos, setPhotos] = useState(() => photosFromProfile(profile));
+  const [geo, setGeo] = useState({ status: "idle", lat: null, lng: null });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -50,6 +58,23 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
       hobbies: prev.hobbies.includes(h) ? prev.hobbies.filter((x) => x !== h) : [...prev.hobbies, h],
     }));
 
+  const addPhoto = (file) =>
+    setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, { id: crypto.randomUUID(), file, name: file.name }]));
+  const removePhoto = (id) => setPhotos((prev) => prev.filter((p) => p.id !== id));
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setGeo({ status: "unsupported", lat: null, lng: null });
+      return;
+    }
+    setGeo((g) => ({ ...g, status: "locating" }));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setGeo({ status: "done", lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setGeo({ status: "denied", lat: null, lng: null }),
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  };
+
   const validate = () => {
     if (!form.first_name.trim()) return "Please enter your first name.";
     if (!form.date_of_birth) return "Please enter your date of birth.";
@@ -58,12 +83,10 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
     if (!form.gender) return "Please select your gender.";
     if (!form.gender_preference) return "Please select who you're interested in.";
     if (!form.location_city) return "Please select your city.";
+    if (!PIN_RE.test(form.pin_code.trim())) return "Please enter a valid 6-digit PIN code.";
     if (!form.dating_intent) return "Please choose what you're looking for.";
     if (form.hobbies.length === 0) return "Pick at least one hobby.";
-    if (!profile && (!photo1 || !photo2)) return `Add ${MIN_PHOTOS} photos to finish your profile.`;
-    for (const file of [photo1, photo2, photo3, photo4]) {
-      if (file && validatePhoto(file)) return validatePhoto(file);
-    }
+    if (photos.length < MIN_PHOTOS) return `Add at least ${MIN_PHOTOS} photos.`;
     return null;
   };
 
@@ -85,19 +108,30 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
         gender: form.gender,
         gender_preference: form.gender_preference,
         location_city: form.location_city,
+        pin_code: form.pin_code.trim(),
         dating_intent: form.dating_intent,
         hobbies: joinHobbies(form.hobbies),
       };
-      if (photo1) fields.photo_1 = await uploadPhoto(me.id, photo1, "photo_1");
-      if (photo2) fields.photo_2 = await uploadPhoto(me.id, photo2, "photo_2");
-      if (photo3) fields.photo_3 = await uploadPhoto(me.id, photo3, "photo_3");
-      if (photo4) fields.photo_4 = await uploadPhoto(me.id, photo4, "photo_4");
+      if (geo.status === "done") {
+        fields.latitude = geo.lat;
+        fields.longitude = geo.lng;
+      }
+
+      // Upload any newly picked photos, keep existing ones as-is, and clear any slot
+      // beyond what's left (so removing a photo actually clears it in the database)
+      for (let i = 0; i < MAX_PHOTOS; i++) {
+        const item = photos[i];
+        if (!item) {
+          fields[`photo_${i + 1}`] = null;
+        } else if (item.file) {
+          fields[`photo_${i + 1}`] = await uploadPhoto(me.id, item.file, `photo_${i + 1}`);
+        } else {
+          fields[`photo_${i + 1}`] = item.url;
+        }
+      }
 
       const row = await saveProfile(me.id, fields);
-      setPhoto1(null);
-      setPhoto2(null);
-      setPhoto3(null);
-      setPhoto4(null);
+      setPhotos(photosFromProfile(row));
       setSaved(true);
       onSaved?.(row);
     } catch (err) {
@@ -106,6 +140,14 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
       setBusy(false);
     }
   };
+
+  const locationHint = {
+    idle: profile?.latitude != null ? "Location on file" : null,
+    locating: "Finding your location…",
+    done: "Location updated ✓",
+    denied: "Couldn't get your location — that's fine, it's optional.",
+    unsupported: "Location isn't available on this device — that's fine, it's optional.",
+  }[geo.status];
 
   return (
     <form className="profile-edit" onSubmit={handleSubmit} noValidate>
@@ -120,18 +162,13 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
       <section className="pe-card">
         <h3>Photos</h3>
         <p className="pe-sub">
-          Your first photo is what people see on Discover. The first {MIN_PHOTOS} are required — add up to 4.
+          Your first photo is what people see on Discover. {MIN_PHOTOS} required — add up to {MAX_PHOTOS}.
         </p>
-        <div className="photo-grid">
-          <PhotoPicker label="Main photo (required)" file={photo1} currentUrl={profile?.photo_1}
-            onChange={setPhoto1} onError={setError} />
-          <PhotoPicker label="Second photo (required)" file={photo2} currentUrl={profile?.photo_2}
-            onChange={setPhoto2} onError={setError} />
-          <PhotoPicker label="Third photo (optional)" file={photo3} currentUrl={profile?.photo_3}
-            onChange={setPhoto3} onError={setError} />
-          <PhotoPicker label="Fourth photo (optional)" file={photo4} currentUrl={profile?.photo_4}
-            onChange={setPhoto4} onError={setError} />
-        </div>
+        <MultiPhotoPicker items={photos} onAdd={addPhoto} onRemove={removePhoto} onError={setError} max={MAX_PHOTOS} />
+        <p className="mphoto-hint">
+          {photos.length} of {MAX_PHOTOS} added
+          {photos.length < MIN_PHOTOS && ` — add ${MIN_PHOTOS - photos.length} more`}
+        </p>
       </section>
 
       <section className="pe-card pe-grid">
@@ -171,12 +208,31 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
           </select>
         </div>
         <div className="field">
+          <label htmlFor="pe-pin">PIN code</label>
+          <input id="pe-pin" className="input" inputMode="numeric" maxLength={6}
+            placeholder="e.g. 560001" value={form.pin_code}
+            onChange={(e) => update("pin_code", e.target.value.replace(/\D/g, "").slice(0, 6))} />
+        </div>
+        <div className="field">
           <label htmlFor="pe-intent">Looking for</label>
           <select id="pe-intent" className="input" value={form.dating_intent}
             onChange={(e) => update("dating_intent", e.target.value)}>
             <option value="">Select</option>
             {DATING_INTENTS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select>
+        </div>
+        <div className="field">
+          <span className="field-label">Location</span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={useMyLocation}
+            disabled={geo.status === "locating"}>
+            <Icon name="pin" size={15} /> {profile?.latitude != null ? "Update my location" : "Use my current location"}
+          </button>
+          {locationHint && (
+            <p className={`mphoto-hint ${geo.status === "done" ? "ok" : ""}`}>
+              {geo.status === "done" && <Icon name="check" size={14} strokeWidth={3} />}
+              {locationHint}
+            </p>
+          )}
         </div>
       </section>
 

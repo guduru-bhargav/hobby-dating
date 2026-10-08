@@ -7,9 +7,13 @@
   grid-template-columns: minmax(340px, 5fr) minmax(0, 6fr);
 }
 
-/* Left brand panel */
+/* Left brand panel. Sticky + its own 100vh so a long form (signup) on the right never
+   stretches it into a tall, mostly-empty column. */
 .auth-hero {
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -77,6 +81,27 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
+}
+
+.auth-hero-stats {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.auth-hero-stats div {
+  display: grid;
+  gap: 2px;
+}
+
+.auth-hero-stats strong {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.auth-hero-stats span {
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 .auth-hero-foot {
@@ -265,6 +290,99 @@
 }
 
 /* OTP step */
+/* Multi-photo picker: one "Add photo" control, thumbnails with a name label + remove button */
+.mphoto-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mphoto-tile,
+.mphoto-add {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mphoto-tile {
+  background: #000;
+  box-shadow: var(--shadow-sm);
+}
+
+.mphoto-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mphoto-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 5px 24px 5px 7px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mphoto-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(10, 10, 14, 0.55);
+  color: #fff;
+}
+
+.mphoto-remove:hover {
+  background: rgba(10, 10, 14, 0.8);
+}
+
+.mphoto-add {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  border: 2px dashed var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mphoto-add:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.mphoto-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mphoto-hint.ok {
+  color: var(--success);
+}
+
 .otp-box {
   display: grid;
   gap: 16px;

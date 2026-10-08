@@ -8,6 +8,12 @@ const POINTS = [
   { icon: "chat", text: "Chat one-on-one in real time" },
 ];
 
+const STATS = [
+  { value: "Free", label: "to join and browse" },
+  { value: "2 min", label: "to set up your profile" },
+  { value: "6", label: "cities across India" },
+];
+
 // Two-panel shell shared by login, signup and password pages
 function AuthLayout({ title, subtitle, children, footer, wide = false }) {
   return (
@@ -28,6 +34,15 @@ function AuthLayout({ title, subtitle, children, footer, wide = false }) {
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="auth-hero-stats">
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <strong>{s.value}</strong>
+              <span>{s.label}</span>
+            </div>
+          ))}
         </div>
 
         <p className="auth-hero-foot">Built for real connections · Hobby Dating</p>

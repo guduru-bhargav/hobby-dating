@@ -90,3 +90,14 @@ export const uploadPhoto = async (userId, file, slot) => {
 
 export const errorMessage = (err, fallback = "Something went wrong. Please try again.") =>
   err?.message || fallback;
+
+// Turns an uploaded photo's storage URL into a readable file name,
+// e.g. ".../photo_1_1733500000000.jpg" -> "photo_1.jpg"
+export const displayPhotoName = (url) => {
+  try {
+    const last = decodeURIComponent(url.split("/").pop().split("?")[0]);
+    return last.replace(/_\d{10,}(?=\.\w+$)/, "") || "Photo";
+  } catch {
+    return "Photo";
+  }
+};
