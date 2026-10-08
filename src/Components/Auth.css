@@ -190,6 +190,13 @@
   margin-top: 6px;
 }
 
+.auth-section-hint {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
 /* Photo upload tiles */
 .photo-grid {
   display: grid;

@@ -9,6 +9,7 @@ import {
   GENDER_PREFERENCES,
   HOBBIES,
   MIN_AGE,
+  MIN_PHOTOS,
 } from "../lib/constants";
 import { calculateAge, errorMessage, joinHobbies, uploadPhoto, validatePhoto } from "../lib/utils";
 import AuthLayout from "./AuthLayout";
@@ -28,6 +29,8 @@ const EMPTY_FORM = {
   hobbies: [],
   photo_1: null,
   photo_2: null,
+  photo_3: null,
+  photo_4: null,
 };
 
 // Validate the whole form; returns the first problem as a message, or null
@@ -47,6 +50,14 @@ const validateForm = (f) => {
   if (p1) return `Photo 1: ${p1}`;
   const p2 = validatePhoto(f.photo_2);
   if (p2) return `Photo 2: ${p2}`;
+  // Photos 3 and 4 are optional, but if one was picked it still has to be a valid image
+  for (const slot of [3, 4]) {
+    const file = f[`photo_${slot}`];
+    if (file) {
+      const problem = validatePhoto(file);
+      if (problem) return `Photo ${slot}: ${problem}`;
+    }
+  }
   return null;
 };
 
@@ -74,8 +85,7 @@ function Signup() {
   const finishProfile = async (userId) => {
     const photo_1 = await uploadPhoto(userId, form.photo_1, "photo_1");
     const photo_2 = await uploadPhoto(userId, form.photo_2, "photo_2");
-
-    await saveProfile(userId, {
+    const fields = {
       first_name: form.first_name.trim(),
       date_of_birth: form.date_of_birth,
       gender: form.gender,
@@ -85,7 +95,13 @@ function Signup() {
       hobbies: joinHobbies(form.hobbies),
       photo_1,
       photo_2,
-    });
+    };
+
+    // Photos 3 and 4 are optional — only upload and save the ones actually picked
+    if (form.photo_3) fields.photo_3 = await uploadPhoto(userId, form.photo_3, "photo_3");
+    if (form.photo_4) fields.photo_4 = await uploadPhoto(userId, form.photo_4, "photo_4");
+
+    await saveProfile(userId, fields);
 
     navigate("/MainPage", { replace: true });
   };
@@ -331,10 +347,14 @@ function Signup() {
           </div>
         </div>
 
-        <div className="auth-section-title">Photos</div>
+        <div className="auth-section-title">
+          Photos <span className="auth-section-hint">{MIN_PHOTOS} required, up to 4</span>
+        </div>
         <div className="photo-grid">
-          <PhotoPicker label="Main photo" file={form.photo_1} onChange={(f) => update("photo_1", f)} onError={setError} />
-          <PhotoPicker label="Second photo" file={form.photo_2} onChange={(f) => update("photo_2", f)} onError={setError} />
+          <PhotoPicker label="Main photo (required)" file={form.photo_1} onChange={(f) => update("photo_1", f)} onError={setError} />
+          <PhotoPicker label="Second photo (required)" file={form.photo_2} onChange={(f) => update("photo_2", f)} onError={setError} />
+          <PhotoPicker label="Third photo (optional)" file={form.photo_3} onChange={(f) => update("photo_3", f)} onError={setError} />
+          <PhotoPicker label="Fourth photo (optional)" file={form.photo_4} onChange={(f) => update("photo_4", f)} onError={setError} />
         </div>
 
         {error && <div className="form-error" role="alert">{error}</div>}

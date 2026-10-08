@@ -7,6 +7,7 @@ import {
   GENDER_PREFERENCES,
   HOBBIES,
   MIN_AGE,
+  MIN_PHOTOS,
 } from "../lib/constants";
 import {
   calculateAge,
@@ -35,6 +36,8 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
   const [form, setForm] = useState(() => fromProfile(profile));
   const [photo1, setPhoto1] = useState(null);
   const [photo2, setPhoto2] = useState(null);
+  const [photo3, setPhoto3] = useState(null);
+  const [photo4, setPhoto4] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -57,9 +60,10 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
     if (!form.location_city) return "Please select your city.";
     if (!form.dating_intent) return "Please choose what you're looking for.";
     if (form.hobbies.length === 0) return "Pick at least one hobby.";
-    if (!profile && (!photo1 || !photo2)) return "Add two photos to finish your profile.";
-    if (photo1 && validatePhoto(photo1)) return validatePhoto(photo1);
-    if (photo2 && validatePhoto(photo2)) return validatePhoto(photo2);
+    if (!profile && (!photo1 || !photo2)) return `Add ${MIN_PHOTOS} photos to finish your profile.`;
+    for (const file of [photo1, photo2, photo3, photo4]) {
+      if (file && validatePhoto(file)) return validatePhoto(file);
+    }
     return null;
   };
 
@@ -86,10 +90,14 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
       };
       if (photo1) fields.photo_1 = await uploadPhoto(me.id, photo1, "photo_1");
       if (photo2) fields.photo_2 = await uploadPhoto(me.id, photo2, "photo_2");
+      if (photo3) fields.photo_3 = await uploadPhoto(me.id, photo3, "photo_3");
+      if (photo4) fields.photo_4 = await uploadPhoto(me.id, photo4, "photo_4");
 
       const row = await saveProfile(me.id, fields);
       setPhoto1(null);
       setPhoto2(null);
+      setPhoto3(null);
+      setPhoto4(null);
       setSaved(true);
       onSaved?.(row);
     } catch (err) {
@@ -111,12 +119,18 @@ function ProfileEdit({ me, profile, onSaved, onCancel, cancelLabel = "Cancel" })
 
       <section className="pe-card">
         <h3>Photos</h3>
-        <p className="pe-sub">Your first photo is what people see on Discover.</p>
+        <p className="pe-sub">
+          Your first photo is what people see on Discover. The first {MIN_PHOTOS} are required — add up to 4.
+        </p>
         <div className="photo-grid">
-          <PhotoPicker label="Main photo" file={photo1} currentUrl={profile?.photo_1}
+          <PhotoPicker label="Main photo (required)" file={photo1} currentUrl={profile?.photo_1}
             onChange={setPhoto1} onError={setError} />
-          <PhotoPicker label="Second photo" file={photo2} currentUrl={profile?.photo_2}
+          <PhotoPicker label="Second photo (required)" file={photo2} currentUrl={profile?.photo_2}
             onChange={setPhoto2} onError={setError} />
+          <PhotoPicker label="Third photo (optional)" file={photo3} currentUrl={profile?.photo_3}
+            onChange={setPhoto3} onError={setError} />
+          <PhotoPicker label="Fourth photo (optional)" file={photo4} currentUrl={profile?.photo_4}
+            onChange={setPhoto4} onError={setError} />
         </div>
       </section>
 

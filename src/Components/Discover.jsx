@@ -3,7 +3,7 @@ import Icon from "./Icon";
 import FiltersSheet from "./FiltersSheet";
 import { EMPTY_FILTERS, countActiveFilters } from "../lib/filters";
 import { fetchLikedIds, fetchProfiles, hasLikedMe, likeProfile, unlikeProfile } from "../api/discover";
-import { calculateAge, errorMessage, parseHobbies, photoOf } from "../lib/utils";
+import { calculateAge, errorMessage, parseHobbies, photoList, photoOf } from "../lib/utils";
 import { DATING_INTENTS } from "../lib/constants";
 import "./Discover.css";
 
@@ -52,7 +52,8 @@ function SuggestionCard({ profile, liked, busy, onToggleLike, onMessage, onOpenP
 // so someone you've already liked or messaged can still be looked up again.
 // `onMessage` is optional: omit it to show a read-only profile with no action button.
 export function ProfileDetail({ profile, liked, onToggleLike, onMessage, onClose }) {
-  const [showSecond, setShowSecond] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photos = photoList(profile);
   const age = calculateAge(profile.date_of_birth);
   const hobbies = parseHobbies(profile.hobbies);
 
@@ -63,13 +64,13 @@ export function ProfileDetail({ profile, liked, onToggleLike, onMessage, onClose
           <Icon name="x" size={18} />
         </button>
 
-        <button type="button" className="detail-photo" onClick={() => setShowSecond((s) => !s)}
-          aria-label="Tap to see the other photo">
-          <img src={showSecond ? photoOf(profile, 2) : photoOf(profile, 1)} alt={profile.first_name} />
-          {profile.photo_2 && (
+        <button type="button" className="detail-photo"
+          onClick={() => setPhotoIndex((i) => (i + 1) % photos.length)}
+          aria-label="Tap to see the next photo">
+          <img src={photos[photoIndex]} alt={profile.first_name} />
+          {photos.length > 1 && (
             <span className="deck-dots" aria-hidden="true">
-              <i className={!showSecond ? "on" : ""} />
-              <i className={showSecond ? "on" : ""} />
+              {photos.map((_, i) => <i key={i} className={i === photoIndex ? "on" : ""} />)}
             </span>
           )}
         </button>

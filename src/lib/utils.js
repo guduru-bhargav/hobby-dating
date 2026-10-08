@@ -48,8 +48,23 @@ export const clockTime = (iso) =>
 export const FALLBACK_AVATAR = (seed = "user") =>
   `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=ffd5dc,ffe3c2,f5d0fe`;
 
+// A profile holds up to 4 photos in photo_1..photo_4 (1 and 2 are mandatory, 3 and 4 optional)
+export const PHOTO_SLOTS = [1, 2, 3, 4];
+
+// The real, uploaded photo URLs only, in slot order. No fallback — may be empty.
+export const rawPhotos = (profile) => PHOTO_SLOTS.map((n) => profile?.[`photo_${n}`]).filter(Boolean);
+
+// Same, but always has at least one entry (a generated avatar if the profile has no photos)
+export const photoList = (profile) => {
+  const list = rawPhotos(profile);
+  return list.length ? list : [FALLBACK_AVATAR(profile?.first_name || "user")];
+};
+
+// A single representative photo (for avatars, thumbnails) — prefers the requested slot,
+// then falls back through whichever other slots are filled.
 export const photoOf = (profile, which = 1) => {
-  const url = which === 2 ? profile?.photo_2 || profile?.photo_1 : profile?.photo_1 || profile?.photo_2;
+  const order = which === 2 ? [2, 1, 3, 4] : [1, 2, 3, 4];
+  const url = order.map((n) => profile?.[`photo_${n}`]).find(Boolean);
   return url || FALLBACK_AVATAR(profile?.first_name || "user");
 };
 

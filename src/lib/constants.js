@@ -44,3 +44,7 @@ export const AGE_BANDS = [
 
 export const MIN_AGE = 18;
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+// A profile needs at least MIN_PHOTOS to be created; it can hold up to MAX_PHOTOS.
+export const MIN_PHOTOS = 2;
+export const MAX_PHOTOS = 4;

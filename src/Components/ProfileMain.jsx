@@ -3,7 +3,7 @@ import "./ProfileMain.css";
 import Icon from "./Icon";
 import ProfileEdit from "./ProfileEdit";
 import { DATING_INTENTS, GENDERS } from "../lib/constants";
-import { calculateAge, parseHobbies, photoOf } from "../lib/utils";
+import { calculateAge, parseHobbies, photoOf, rawPhotos } from "../lib/utils";
 
 // Fields that make a profile look complete on Discover
 const COMPLETENESS = [
@@ -58,6 +58,7 @@ function ProfileMain({ me, profile, onProfileUpdated }) {
 
   const age = calculateAge(profile.date_of_birth);
   const hobbies = parseHobbies(profile.hobbies);
+  const photos = rawPhotos(profile);
   const done = COMPLETENESS.filter((check) => check(profile)).length;
   const percent = Math.round((done / COMPLETENESS.length) * 100);
   const intent = DATING_INTENTS.find((d) => d.value === profile.dating_intent)?.label;
@@ -89,13 +90,14 @@ function ProfileMain({ me, profile, onProfileUpdated }) {
 
       <div className="profile-grid">
         <aside className="profile-hero">
-          <div className="profile-hero-bg" style={{ backgroundImage: `url(${photoOf(profile, 1)})` }} />
-          <div className="profile-hero-shade" />
+          <div className="profile-hero-banner" style={{ backgroundImage: `url(${photoOf(profile, 1)})` }} />
 
-          <div className="profile-hero-content">
-            <div className="profile-hero-avatar-ring">
-              <img className="profile-hero-avatar" src={photoOf(profile, 2)} alt={`${profile.first_name} photo`} />
-            </div>
+          <div className="profile-hero-avatar-ring">
+            <img className="profile-hero-avatar" src={photoOf(profile, 2)} alt={`${profile.first_name} photo`} />
+          </div>
+
+          {/* Name, age and location sit below the images, not over them */}
+          <div className="profile-hero-text">
             <h2>{profile.first_name}{age !== null ? <span className="profile-age">, {age}</span> : ""}</h2>
             {profile.location_city && (
               <p className="profile-hero-meta"><Icon name="pin" size={14} /> {profile.location_city}</p>
@@ -118,6 +120,17 @@ function ProfileMain({ me, profile, onProfileUpdated }) {
               </p>
             </div>
           </article>
+
+          {photos.length > 0 && (
+            <article className="detail-card">
+              <h4>Photos <span className="detail-card-count">{photos.length}/4</span></h4>
+              <div className="profile-gallery">
+                {photos.map((url, i) => (
+                  <img key={url} src={url} alt={`${profile.first_name} photo ${i + 1}`} />
+                ))}
+              </div>
+            </article>
+          )}
 
           <article className="detail-card">
             <h4>Hobbies</h4>
